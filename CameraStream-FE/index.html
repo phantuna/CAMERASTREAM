@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Hoàng Phát Technology Era - Hệ thống giám sát camera và nhận diện AI thông minh" />
+    <meta name="theme-color" content="#0F172A" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+    <title>Hoàng Phát Technology Era - Hệ Thống Giám Sát Camera & Kiểm Soát Xe</title>
+  </head>
+  <body>
+    <div id="root">
+      <div id="app-preloader" style="
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at 50% 40%, #0F172A 0%, #020617 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #F8FAFC;
+        user-select: none;
+      ">
+        <style>
+          @keyframes csPulse {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 20px rgba(2, 132, 199, 0.6)); }
+          }
+          @keyframes csSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          @keyframes csBar {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(30%); }
+            100% { transform: translateX(200%); }
+          }
+        </style>
+        <div style="position: relative; width: 72px; height: 72px; margin-bottom: 24px;">
+          <!-- Spinning radar ring -->
+          <div style="
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 2px dashed rgba(56, 189, 248, 0.35);
+            animation: csSpin 10s linear infinite;
+          "></div>
+          <!-- Logo container -->
+          <div style="
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            animation: csPulse 2.5s ease-in-out infinite;
+          ">
+            <img src="/favicon.png" alt="Hoàng Phát Logo" style="width: 48px; height: 48px; object-fit: contain;" />
+          </div>
+        </div>
+
+        <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+          <span>HOÀNG PHÁT</span>
+          <span style="
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 13px;
+            font-weight: 900;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 1px 7px;
+            border-radius: 6px;
+          ">TECHNOLOGY ERA</span>
+        </div>
+
+        <div style="font-size: 13px; color: #94A3B8; margin-bottom: 28px; font-weight: 500;">
+          Hệ Thống Giám Sát Camera & Nhận Diện AI Thông Minh
+        </div>
+
+        <!-- Progress bar -->
+        <div style="
+          width: 200px;
+          height: 3px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 99px;
+          overflow: hidden;
+          position: relative;
+        ">
+          <div style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(90deg, #38BDF8, #818CF8);
+            border-radius: 99px;
+            animation: csBar 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          "></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

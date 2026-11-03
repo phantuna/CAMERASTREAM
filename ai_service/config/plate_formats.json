@@ -1,0 +1,35 @@
+{
+  // Extra plate rules, loaded with:  --formats examples/plate_formats.json
+  // (or in code: options.LoadPlateFormats("examples/plate_formats.json")).
+  // Both sections ("formats" and "charMap") are optional.
+  //
+  // "formats": one pattern per text line, top to bottom:
+  //   D = digit   L = letter   A = digit or letter   [NG] = one of the listed characters
+  //   X? = optional   X{3} = exactly 3   X{4,5} = 4 or 5      ('-', '.' and spaces are ignored)
+  //   A format with the same name as a built-in one (VN-1LINE, VN-2LINE) replaces it.
+  //
+  // "charMap": look-alike rules. Key = a symbol the recognizer may emit, value = the 0-9 / A-Z
+  //   characters it may stand for (the likeliest wins). Without a rule a symbol outside 0-9 / A-Z is dropped,
+  //   which made a "C" read as "€" disappear. Built in: "€" = "CE", "℃" = "C". Letters with marks (Ċ, Ç),
+  //   lowercase and fullwidth letters are already read as the plain capital (InferOptions.PlateFoldLetters).
+  //
+  // "replaceDefaults": true drops the built-in formats and look-alike rules first.
+  "replaceDefaults": false,
+  "formats": [
+    {
+      // Illustration only: "29-B1 123.45" written on ONE line = 2 digits, a letter, a digit, then 5 digits.
+      "name": "example-1line-motorbike-series",
+      "lines": ["DDLD D{5}"]
+    },
+    {
+      // Illustration only: a two-line plate whose first line is two letters (e.g. "NG") and whose second line has 3-5 digits.
+      "name": "example-2line-two-letter-prefix",
+      "lines": ["DD[N][G]", "D{3,5}"]
+    }
+  ],
+  "charMap": {
+    // Illustration only: symbols that can look like a digit on a worn plate.
+    "§": "5",
+    "¥": "Y"
+  }
+}

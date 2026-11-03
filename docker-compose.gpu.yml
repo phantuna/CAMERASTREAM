@@ -1,0 +1,18 @@
+services:
+  ai-service:
+    image: camerastream-ai:gpu
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile.gpu
+    environment:
+      - AI_OCR_WORKERS=8
+      - AI_OCR_PER_FRAME=8
+      - AI_FRAME_SKIP=2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+

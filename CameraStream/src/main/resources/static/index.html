@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HPParking - Hệ Thống Giám Sát Camera & ONVIF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0B0F19;
+            --bg-card: #131B2E;
+            --border-color: #23314E;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --primary: #3B82F6;
+            --primary-hover: #2563EB;
+            --accent-green: #10B981;
+            --accent-amber: #F59E0B;
+            --accent-red: #EF4444;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563EB, #06B6D4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+
+        .title-group h1 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .title-group p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* 2. SEARCH FLOW (UI Fix #01) */
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0 12px;
+            min-width: 320px;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--primary);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 9px 0;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .search-clear-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 13px;
+        }
+
+        .search-clear-btn:hover {
+            color: var(--text-main);
+        }
+
+        .search-kbd {
+            background: #1E293B;
+            color: #64748B;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            border: 1px solid #334155;
+            font-family: monospace;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-card);
+            border-color: var(--primary);
+        }
+
+        /* Camera Grid */
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .camera-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .cam-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.2s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .cam-card:hover {
+            border-color: #38517F;
+        }
+
+        .cam-header {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.4);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cam-title-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cam-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        mark {
+            background-color: #2563EB;
+            color: #FFFFFF;
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-online {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34D399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-offline {
+            background: rgba(239, 68, 68, 0.15);
+            color: #F87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: currentColor;
+            box-shadow: 0 0 6px currentColor;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #05070D;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: black;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: monospace;
+            color: #38BDF8;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .video-loading {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes skeletonPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.25; }
+        }
+
+        /* 1. SKELETON LOADING (UI Fix #03) */
+        .skeleton-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .skeleton-header {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.4);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .skeleton-bar {
+            background-color: #1E293B;
+            border-radius: 6px;
+            animation: skeletonPulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-viewport {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #080C14;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .skeleton-footer {
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.3);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .cam-footer {
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.3);
+            border-top: 1px solid var(--border-color);
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        .cam-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+            background-color: var(--bg-card);
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            grid-column: 1 / -1;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 560px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: #0B0F19;
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .discovery-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .discovery-table th, .discovery-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .discovery-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo-area">
+            <div class="logo-badge">📹</div>
+            <div class="title-group">
+                <h1>HPParking Camera Stream Hub</h1>
+                <p>MediaMTX WebRTC & ONVIF Client • Chuẩn Doanh Nghiệp HPTicket</p>
+            </div>
+        </div>
+
+        <div class="actions">
+            <!-- Complete Search Flow Input -->
+            <div class="search-box">
+                <span id="searchIcon" style="color: var(--text-muted); margin-right: 8px;">🔍</span>
+                <input
+                    id="searchInput"
+                    class="search-input"
+                    type="text"
+                    placeholder="Tìm theo tên, IP, vị trí, stream... (Ctrl+K)"
+                    oninput="handleSearchInput(event)"
+                >
+                <button
+                    id="clearSearchBtn"
+                    class="search-clear-btn"
+                    style="display: none;"
+                    onclick="clearSearch()"
+                    title="Xóa tìm kiếm"
+                >✕</button>
+                <kbd id="searchKbd" class="search-kbd">Ctrl+K</kbd>
+            </div>
+
+            <button class="btn btn-outline" onclick="openDiscoverModal()">🔍 Quét ONVIF LAN</button>
+            <button class="btn btn-primary" onclick="openAddCameraModal()">+ Thêm Camera</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="cameraGrid" class="camera-grid">
+            <!-- Dynamic Skeleton or Camera Cards -->
+        </div>
+    </main>
+
+    <!-- Modal Add Camera -->
+    <div id="addCameraModal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span>Cấu hình Camera mới</span>
+                <span style="cursor: pointer" onclick="closeModal('addCameraModal')">✕</span>
+            </div>
+            <form id="cameraForm" onsubmit="submitAddCamera(event)">
+                <div class="form-group">
+                    <label class="form-label">Tên Camera</label>
+                    <input class="form-input" id="camName" placeholder="vd: Camera Cổng Vào 1" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Địa chỉ IP</label>
+                        <input class="form-input" id="camIp" placeholder="192.168.1.205" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cổng ONVIF</label>
+                        <input class="form-input" type="number" id="camOnvifPort" value="80" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Username ONVIF / RTSP</label>
+                        <input class="form-input" id="camUser" value="admin">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input class="form-input" type="password" id="camPass" placeholder="••••••••">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Đường dẫn Stream Path (duy nhất trên MediaMTX)</label>
+                    <input class="form-input" id="camStreamPath" placeholder="vd: cam_gate_in">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">RTSP Source URL (Để trống để ONVIF tự tìm)</label>
+                    <input class="form-input" id="camRtspUrl" placeholder="rtsp://admin:pass@192.168.1.205:554/Streaming/Channels/101">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-outline" onclick="testConnection()">Kiểm Tra Kết Nối</button>
+                    <button type="submit" class="btn btn-primary">Lưu & Bắt Đầu Stream</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal ONVIF Discovery -->
+    <div id="discoverModal" class="modal-backdrop">
+        <div class="modal-box" style="max-width: 680px;">
+            <div class="modal-title">
+                <span>Dò tìm Camera ONVIF trong mạng LAN (WS-Discovery)</span>
+                <span style="cursor: pointer" onclick="closeModal('discoverModal')">✕</span>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                Hệ thống gửi gói tin WS-Discovery Probe (UDP 3702) tới tất cả thiết bị mạng LAN.
+            </p>
+            <div id="discoveryContent">
+                <div style="text-align: center; padding: 24px;">
+                    <div class="spinner" style="margin: 0 auto 12px;"></div>
+                    <p style="font-size: 13px; color: var(--text-muted);">Đang dò tìm camera trên mạng...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const activeConnections = new Map();
+        let currentSearchQuery = '';
+        let searchDebounceTimer = null;
+
+        // Ctrl + K keyboard shortcut
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+        });
+
+        function renderSkeleton() {
+            const grid = document.getElementById('cameraGrid');
+            grid.innerHTML = `
+                <div class="skeleton-card">
+                    <div class="skeleton-header">
+                        <div style="display: flex; gap: 10px; align-items: center; width: 60%;">
+                            <div class="skeleton-bar" style="width: 140px; height: 16px;"></div>
+                            <div class="skeleton-bar" style="width: 55px; height: 18px; border-radius: 12px;"></div>
+                        </div>
+                        <div class="skeleton-bar" style="width: 90px; height: 14px;"></div>
+                    </div>
+                    <div class="skeleton-viewport">
+                        <div class="spinner"></div>
+                        <span style="font-size: 12px; color: #64748B;">Đang chuẩn bị luồng trực tiếp...</span>
+                    </div>
+                    <div class="skeleton-footer">
+                        <div class="skeleton-bar" style="width: 80px; height: 14px;"></div>
+                        <div style="display: flex; gap: 8px;">
+                            <div class="skeleton-bar" style="width: 60px; height: 28px;"></div>
+                            <div class="skeleton-bar" style="width: 70px; height: 28px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton-header">
+                        <div style="display: flex; gap: 10px; align-items: center; width: 60%;">
+                            <div class="skeleton-bar" style="width: 140px; height: 16px;"></div>
+                            <div class="skeleton-bar" style="width: 55px; height: 18px; border-radius: 12px;"></div>
+                        </div>
+                        <div class="skeleton-bar" style="width: 90px; height: 14px;"></div>
+                    </div>
+                    <div class="skeleton-viewport">
+                        <div class="spinner"></div>
+                        <span style="font-size: 12px; color: #64748B;">Đang chuẩn bị luồng trực tiếp...</span>
+                    </div>
+                    <div class="skeleton-footer">
+                        <div class="skeleton-bar" style="width: 80px; height: 14px;"></div>
+                        <div style="display: flex; gap: 8px;">
+                            <div class="skeleton-bar" style="width: 60px; height: 28px;"></div>
+                            <div class="skeleton-bar" style="width: 70px; height: 28px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function fetchCameras(query = '') {
+            const icon = document.getElementById('searchIcon');
+            if (query.trim()) icon.innerText = '⏳';
+
+            try {
+                const endpoint = query.trim()
+                    ? `${API_BASE}/api/cameras?search=${encodeURIComponent(query.trim())}`
+                    : `${API_BASE}/api/cameras`;
+
+                const res = await fetch(endpoint);
+                const response = await res.json();
+                const cameras = (response && response.data) ? response.data : [];
+                renderCameras(cameras, query.trim());
+            } catch (err) {
+                console.error("Lỗi tải danh sách camera:", err);
+            } finally {
+                icon.innerText = '🔍';
+            }
+        }
+
+        function highlight(text, query) {
+            if (!query || !text) return text || '';
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        function renderCameras(cameras, query = '') {
+            const grid = document.getElementById('cameraGrid');
+            grid.innerHTML = '';
+
+            // Clean up existing connections before re-rendering
+            activeConnections.forEach((conn, camId) => {
+                cleanupConnection(camId);
+            });
+
+            if (cameras.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 40px; margin-bottom: 12px;">📹</div>
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 6px;">
+                            ${query ? `Không tìm thấy camera nào khớp với "${query}"` : 'Chưa có camera nào trong hệ thống'}
+                        </h3>
+                        <p style="font-size: 13px; color: var(--text-muted); max-width: 420px; margin: 0 auto 16px auto;">
+                            ${query ? 'Vui lòng kiểm tra lại chính tả địa chỉ IP, tên cổng hoặc vị trí camera.' : 'Bấm nút "Quét ONVIF LAN" hoặc "Thêm Camera" để bắt đầu theo dõi.'}
+                        </p>
+                        ${query ? `<button class="btn btn-primary btn-sm" onclick="clearSearch()">Xóa bộ lọc tìm kiếm</button>` : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            cameras.forEach(cam => {
+                const card = document.createElement('div');
+                card.className = 'cam-card';
+                card.innerHTML = `
+                    <div class="cam-header">
+                        <div class="cam-title-info">
+                            <span class="cam-name">${highlight(cam.name, query)}</span>
+                            <span class="status-badge ${cam.status === 'ONLINE' ? 'status-online' : 'status-offline'}">
+                                <span class="status-dot"></span>
+                                ${cam.status}
+                            </span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted); font-family: monospace;">
+                            ${highlight(cam.ipAddress, query)}:${cam.onvifPort || 80}
+                        </div>
+                    </div>
+                    <div class="video-container">
+                        <div class="video-overlay">${highlight(cam.streamPath, query)} | WebRTC (WHEP)</div>
+                        <video id="video_${cam.id}" autoplay playsinline muted></video>
+                        <div id="loader_${cam.id}" class="video-loading">
+                            <div class="spinner"></div>
+                            <span>Đang nạp luồng WebRTC...</span>
+                        </div>
+                    </div>
+                    <div class="cam-footer">
+                        <span>${cam.location ? highlight(cam.location, query) : 'Độ trễ: &lt; 0.2s'}</span>
+                        <div class="cam-controls">
+                            <button class="btn btn-outline btn-sm" onclick="takeSnapshot(${cam.id})">📸 Chụp</button>
+                            <button class="btn btn-outline btn-sm" onclick="restartStream(${cam.id}, '${cam.webrtcUrl}')">🔄 Nối lại</button>
+                            <button class="btn btn-outline btn-sm" style="color: #EF4444" onclick="deleteCamera(${cam.id})">🗑</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+
+                startWhepPlayback(cam.id, cam.webrtcUrl);
+            });
+        }
+
+        // Debounced Search Input Handler (UI Fix #01)
+        function handleSearchInput(e) {
+            const query = e.target.value;
+            currentSearchQuery = query;
+
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const kbd = document.getElementById('searchKbd');
+            if (query.length > 0) {
+                clearBtn.style.display = 'inline-block';
+                kbd.style.display = 'none';
+            } else {
+                clearBtn.style.display = 'none';
+                kbd.style.display = 'inline-block';
+            }
+
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                fetchCameras(query);
+            }, 300);
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            document.getElementById('clearSearchBtn').style.display = 'none';
+            document.getElementById('searchKbd').style.display = 'inline-block';
+            input.focus();
+            fetchCameras('');
+        }
+
+        // Memory-safe WebRTC Connection
+        async function startWhepPlayback(camId, whepUrl) {
+            const videoElem = document.getElementById(`video_${camId}`);
+            const loaderElem = document.getElementById(`loader_${camId}`);
+
+            cleanupConnection(camId);
+
+            try {
+                const pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+                activeConnections.set(camId, { pc, stream: null });
+
+                pc.addTransceiver('video', { direction: 'recvonly' });
+                pc.addTransceiver('audio', { direction: 'recvonly' });
+
+                pc.ontrack = (event) => {
+                    const stream = event.streams[0];
+                    if (videoElem) {
+                        videoElem.srcObject = stream;
+                    }
+                    const conn = activeConnections.get(camId);
+                    if (conn) conn.stream = stream;
+
+                    if (loaderElem) loaderElem.style.display = 'none';
+                };
+
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+
+                const response = await fetch(whepUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/sdp' },
+                    body: offer.sdp
+                });
+
+                if (!response.ok) {
+                    throw new Error(`MediaMTX WHEP lỗi: ${response.status}`);
+                }
+
+                const answerSdp = await response.text();
+                await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+
+            } catch (err) {
+                console.warn(`Camera #${camId} WebRTC info:`, err.message);
+                if (loaderElem) {
+                    loaderElem.innerHTML = `<span style="color:#F59E0B">Đang chờ stream MediaMTX (${err.message})</span>`;
+                }
+            }
+        }
+
+        function cleanupConnection(camId) {
+            const conn = activeConnections.get(camId);
+            if (conn) {
+                if (conn.stream) {
+                    conn.stream.getTracks().forEach(t => t.stop());
+                }
+                if (conn.pc) {
+                    conn.pc.close();
+                }
+                activeConnections.delete(camId);
+            }
+            const videoElem = document.getElementById(`video_${camId}`);
+            if (videoElem) {
+                videoElem.srcObject = null;
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            activeConnections.forEach((conn, camId) => {
+                cleanupConnection(camId);
+            });
+        });
+
+        function restartStream(camId, whepUrl) {
+            startWhepPlayback(camId, whepUrl);
+        }
+
+        async function takeSnapshot(camId) {
+            window.open(`${API_BASE}/api/cameras/${camId}/snapshot`, '_blank');
+        }
+
+        async function deleteCamera(camId) {
+            if (!confirm('Bạn có chắc muốn xóa camera này?')) return;
+            cleanupConnection(camId);
+            await fetch(`${API_BASE}/api/cameras/${camId}`, { method: 'DELETE' });
+            fetchCameras(currentSearchQuery);
+        }
+
+        function openAddCameraModal() {
+            document.getElementById('addCameraModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function submitAddCamera(e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('camName').value,
+                ipAddress: document.getElementById('camIp').value,
+                onvifPort: parseInt(document.getElementById('camOnvifPort').value),
+                username: document.getElementById('camUser').value,
+                password: document.getElementById('camPass').value,
+                streamPath: document.getElementById('camStreamPath').value,
+                rtspSourceUrl: document.getElementById('camRtspUrl').value
+            };
+
+            const res = await fetch(`${API_BASE}/api/cameras`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+            if (result && result.code === 200) {
+                closeModal('addCameraModal');
+                fetchCameras(currentSearchQuery);
+            } else {
+                alert('Lỗi tạo camera: ' + (result.message || 'Không xác định'));
+            }
+        }
+
+        async function testConnection() {
+            const payload = {
+                ipAddress: document.getElementById('camIp').value,
+                port: parseInt(document.getElementById('camOnvifPort').value),
+                username: document.getElementById('camUser').value,
+                password: document.getElementById('camPass').value
+            };
+
+            const res = await fetch(`${API_BASE}/api/cameras/test-connection`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const response = await res.json();
+            const result = response.data || {};
+            alert(result.message + (result.resolvedRtspUrl ? '\nĐã tìm thấy link RTSP: ' + result.resolvedRtspUrl : ''));
+            if (result.resolvedRtspUrl) {
+                document.getElementById('camRtspUrl').value = result.resolvedRtspUrl;
+            }
+        }
+
+        async function openDiscoverModal() {
+            document.getElementById('discoverModal').style.display = 'flex';
+            const container = document.getElementById('discoveryContent');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 24px;">
+                    <div class="spinner" style="margin: 0 auto 12px;"></div>
+                    <p style="font-size: 13px; color: var(--text-muted);">Đang phát gói tin WS-Discovery quét IP camera...</p>
+                </div>
+            `;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/cameras/discover?timeoutMs=2500`, { method: 'POST' });
+                const response = await res.json();
+                const devices = (response && response.data) ? response.data : [];
+                if (devices.length === 0) {
+                    container.innerHTML = `<p style="padding: 20px; text-align: center; color: var(--text-muted)">Không tìm thấy thiết bị ONVIF nào trong dải mạng hiện tại.</p>`;
+                    return;
+                }
+
+                let html = `
+                    <table class="discovery-table">
+                        <thead>
+                            <tr>
+                                <th>IP</th>
+                                <th>Cổng</th>
+                                <th>Địa chỉ XAddrs</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                devices.forEach(d => {
+                    html += `
+                        <tr>
+                            <td><strong>${d.ipAddress}</strong></td>
+                            <td>${d.port}</td>
+                            <td style="font-size: 11px; color: var(--text-muted); word-break: break-all;">${d.xAddrs}</td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" onclick="selectDiscovered('${d.ipAddress}', ${d.port})">Chọn</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<p style="color: #EF4444; padding: 10px;">Lỗi dò tìm: ${err.message}</p>`;
+            }
+        }
+
+        function selectDiscovered(ip, port) {
+            closeModal('discoverModal');
+            document.getElementById('camIp').value = ip;
+            document.getElementById('camOnvifPort').value = port;
+            document.getElementById('camName').value = 'Camera ' + ip;
+            document.getElementById('camStreamPath').value = 'cam_' + ip.replaceAll('.', '_');
+            openAddCameraModal();
+        }
+
+        // Initialize with Skeleton first
+        renderSkeleton();
+        fetchCameras('');
+    </script>
+</body>
+</html>

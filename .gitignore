@@ -1,0 +1,136 @@
+# ==============================================================================
+# BẢO MẬT: BẢN QUYỀN, PRIVATE KEYS & CHỨNG THỰC
+# ==============================================================================
+*.key
+*.pem
+*.pfx
+*.keystore
+release_tools/license_private.key
+release_tools/master.key
+deploy/license/*.lic
+*.lic
+!CameraStream/src/test/resources/license-fixtures/*.lic
+
+# MediaMTX & Local SSL
+mediamtx/auto.key
+mediamtx/auto.crt
+CameraStream/auto.key
+CameraStream/auto.crt
+
+# ==============================================================================
+# BIẾN MÔI TRƯỜNG & SECRETS
+# ==============================================================================
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ==============================================================================
+# DỮ LIỆU THỰC TẾ, SNAPSHOTS BIỂN SỐ & GÓI DEPLOY KHÁCH HÀNG (LOẠI BỎ HOÀN TOÀN)
+# ==============================================================================
+data/
+deploy/
+CameraStream/data/
+*.mv.db
+*.trace.db
+*.sql.gz
+*.sqlite
+*.db
+
+# Các file nén gói phát hành lớn (tránh vượt hạn mức 100MB GitHub)
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+deploy.zip
+
+# ==============================================================================
+# FILE THỰC THI, CÔNG CỤ BUILD SETUP EXE & ĐÓNG GÓI PHÁT HÀNH (LOẠI BỎ KHỎI GIT)
+# ==============================================================================
+release_tools/
+packaging/
+build/
+manifest.json
+*.exe
+*.dll
+*.so
+*.dylib
+!ai_service/core/_frame_sync.so
+!ai_service/core/_frame_sync.pyd
+mediamtx/mediamtx.exe
+CameraStream-Setup.exe
+
+# ==============================================================================
+# JAVA / SPRING BOOT (CameraStream)
+# ==============================================================================
+CameraStream/target/
+**/target/
+.mvn/wrapper/maven-wrapper.jar
+*.class
+
+# ==============================================================================
+# FRONTEND / NODE.JS (CameraStream-FE)
+# ==============================================================================
+node_modules/
+**/node_modules/
+CameraStream-FE/dist/
+CameraStream-FE/dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==============================================================================
+# PYTHON / AI SERVICE
+# ==============================================================================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+ENV/
+packaging/nuitka_smoke/build/
+packaging/build/
+*.build/
+*.dist/
+ai_service/native_modules/
+ai_service/models/
+*.onnx
+*.pt
+*.engine
+*.weights
+
+# AI Events (Ảnh chụp debug, recent_detections.json, video_logs)
+ai_service/events/
+face_service/events/
+
+# ==============================================================================
+# LOGS & TEMPORARY FILES
+# ==============================================================================
+*.log
+logs/
+**/logs/
+query
+diff_alpr.txt
+full_diff*.txt
+
+# ==============================================================================
+# IDE & HỆ ĐIỀU HÀNH
+# ==============================================================================
+.idea/
+*.iml
+.vscode/
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
+

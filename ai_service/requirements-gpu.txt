@@ -1,0 +1,8 @@
+# Core Computer Vision & Image Processing
+numpy>=1.23.0
+Pillow>=9.5.0
+opencv-python-headless>=4.8.0
+scikit-image>=0.20.0
+
+# ONNX Runtime GPU (NVIDIA CUDA - engine duy nhất, 100% thuần ONNX)
+onnxruntime-gpu>=1.16.0
