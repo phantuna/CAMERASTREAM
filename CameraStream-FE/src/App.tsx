@@ -209,13 +209,13 @@ function AppContent() {
         {/* Top: Sidebar Section Header (Logo & Brand) */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{
-            padding: isCollapsed ? '12px 8px' : '12px 14px',
+            padding: isCollapsed ? '12px 8px' : '10px 14px',
             borderBottom: '1px solid #E2E8F0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: isCollapsed ? 'center' : 'space-between',
             backgroundColor: '#FFFFFF',
-            minHeight: '60px',
+            minHeight: '66px',
             boxSizing: 'border-box'
           }}>
             {isCollapsed ? (
@@ -244,20 +244,20 @@ function AppContent() {
               </button>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, overflow: 'hidden', flex: 1, marginRight: '6px' }}>
                   <img
-                    src="/hoang-phat-logo.jpg"
+                    src="/hoang-phat-brand-logo.png"
                     alt="Hoàng Phát Technology Era"
-                    style={{ height: '36px', maxWidth: '170px', objectFit: 'contain', flexShrink: 0 }}
+                    style={{ height: '46px', maxWidth: '190px', width: 'auto', objectFit: 'contain', flexShrink: 0, display: 'block' }}
                   />
                 </div>
                 <button
                   onClick={() => setIsCollapsed(true)}
                   title="Thu gọn menu"
                   style={{
-                    width: '26px',
-                    height: '26px',
-                    borderRadius: '6px',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '7px',
                     backgroundColor: '#F8FAFC',
                     border: '1px solid #E2E8F0',
                     color: '#64748B',
@@ -269,7 +269,7 @@ function AppContent() {
                     flexShrink: 0
                   }}
                 >
-                  <IconMenu size={14} />
+                  <IconMenu size={15} />
                 </button>
               </div>
             )}

@@ -43,7 +43,7 @@ CURRENT_DIR = Path(__file__).resolve().parent
 AI_SERVICE_DIR = CURRENT_DIR.parent if CURRENT_DIR.name in ("core", "Camera_connect") else CURRENT_DIR
 BASE_DIR = AI_SERVICE_DIR
 
-for p in (AI_SERVICE_DIR, CURRENT_DIR, AI_SERVICE_DIR / "core", AI_SERVICE_DIR / "Camera_connect", AI_SERVICE_DIR / "utils"):
+for p in (AI_SERVICE_DIR / "native_modules", AI_SERVICE_DIR, CURRENT_DIR, AI_SERVICE_DIR / "core", AI_SERVICE_DIR / "Camera_connect", AI_SERVICE_DIR / "utils"):
     if p.exists() and str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
@@ -51,7 +51,13 @@ if TYPE_CHECKING:
     from core.video_alpr_processor import VideoALPRProcessor, generate_mock_traffic_video
     from core.plate_detector_deskew import YOLOXPlateDetector
     from core.onnx_lpr_engine import OnnxLprEngine, OnnxObjectDetector
+    def sync_headers() -> Dict[str, str]: ...
+    def check_clock_drift(header_value: Optional[str]) -> bool: ...
 else:
+    try:
+        from core._frame_sync import sync_headers, check_clock_drift  # type: ignore
+    except ImportError:
+        from _frame_sync import sync_headers, check_clock_drift  # type: ignore
     try:
         from core.video_alpr_processor import VideoALPRProcessor, generate_mock_traffic_video
     except ImportError:
@@ -1378,16 +1384,20 @@ class CameraStreamBridge:
         """Lấy danh sách các camera đang được quản lý từ CameraStream Backend."""
         url = f"{self.backend_url}/api/cameras"
         service_key = os.getenv("SERVICE_INTERNAL_KEY", "camerastream_secret_key_2026")
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "ALPR-Bridge/1.0",
-                "X-Internal-Service-Key": service_key
-            }
-        )
+        headers = {
+            "User-Agent": "ALPR-Bridge/1.0",
+            "X-Internal-Service-Key": service_key
+        }
+        headers.update(sync_headers())
+        req = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=5) as response:
                 if response.status == 200:
+                    resp_sig = response.headers.get("X-Service-Integrity")
+                    if not check_clock_drift(resp_sig):
+                        self.is_backend_connected = False
+                        self.last_fetch_error = "CLOCK_DRIFT_ERROR"
+                        return []
                     data = json.loads(response.read().decode("utf-8"))
                     self.is_backend_connected = True
                     self.last_fetch_error = None
@@ -1411,16 +1421,18 @@ class CameraStreamBridge:
         """Lấy danh sách các camera đang được bật phân hệ AI tương ứng từ Backend."""
         url = f"{self.backend_url}/api/cameras/ai-tasks?aiType={ai_type}"
         service_key = os.getenv("SERVICE_INTERNAL_KEY", "camerastream_secret_key_2026")
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "ALPR-Bridge/1.0",
-                "X-Internal-Service-Key": service_key
-            }
-        )
+        headers = {
+            "User-Agent": "ALPR-Bridge/1.0",
+            "X-Internal-Service-Key": service_key
+        }
+        headers.update(sync_headers())
+        req = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=5) as response:
                 if response.status == 200:
+                    resp_sig = response.headers.get("X-Service-Integrity")
+                    if not check_clock_drift(resp_sig):
+                        return []
                     data = json.loads(response.read().decode("utf-8"))
                     return data.get("data", [])
                 return []
@@ -1456,14 +1468,16 @@ class CameraStreamBridge:
 
         json_bytes = json.dumps(payload).encode("utf-8")
         service_key = os.getenv("SERVICE_INTERNAL_KEY", "camerastream_secret_key_2026")
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "ALPR-Bridge/1.0",
+            "X-Internal-Service-Key": service_key
+        }
+        headers.update(sync_headers())
         req = urllib.request.Request(
             url,
             data=json_bytes,
-            headers={
-                "Content-Type": "application/json",
-                "User-Agent": "ALPR-Bridge/1.0",
-                "X-Internal-Service-Key": service_key
-            },
+            headers=headers,
             method="POST"
         )
 
@@ -1937,10 +1951,11 @@ class CameraStreamBridge:
                             )
 
                     reader.burst_mode = has_urgent
-                    target_interval = 0.033 if has_urgent else (inference_interval if is_active else 0.50)
+                    idle_interval = float(os.getenv("AI_IDLE_INTERVAL", "0.080"))
+                    target_interval = 0.033 if has_urgent else (inference_interval if is_active else idle_interval)
 
                     if now_mono - last_inference < target_interval:
-                        time.sleep(loop_sleep if is_active else 0.05)
+                        time.sleep(loop_sleep if is_active else 0.02)
                         continue
 
                     if not reader.is_connected:
@@ -2111,6 +2126,13 @@ class CameraStreamBridge:
 
         ensure_mediamtx_running()
 
+        # Khởi chạy HTTP SSE & REST API server trên web_port (mặc định 5000)
+        try:
+            start_sse_server(port=web_port)
+            print(f"✅ [AI HTTP SERVER ONLINE] Đã mở cổng {web_port} (ROI Config, SSE Bám biển, Snapshot)...")
+        except Exception as e:
+            print(f"⚠️ [CẢNH BÁO] Không thể bật HTTP Server trên cổng {web_port}: {e}")
+
         stop_event = threading.Event()
         # workers: Dict[cam_id -> (name, reader, thread, stop_event)] liên kết với GLOBAL_CAMERA_WORKERS
         workers: Dict[int, Tuple[str, Any, threading.Thread, threading.Event]] = GLOBAL_CAMERA_WORKERS
@@ -2153,9 +2175,10 @@ class CameraStreamBridge:
                         continue
 
                     # KẾT NỐI VỚI CẤU HÌNH GÁN MODULE AI:
-                    # Chỉ khởi chạy ALPR nếu Camera được cấu hình BẬT phân hệ VEHICLE_ANPR
+                    # Chỉ khởi chạy ALPR nếu Camera được cấu hình BẬT phân hệ VEHICLE_ANPR.
+                    # Mặc định (nếu chưa gán hoặc danh sách rỗng): LUÔN CHẠY ALPR.
                     active_mods = c.get("activeAiModules")
-                    if active_mods is not None and isinstance(active_mods, list):
+                    if active_mods is not None and isinstance(active_mods, list) and len(active_mods) > 0:
                         if "VEHICLE_ANPR" not in active_mods:
                             # Camera này bị TẮT AI hoặc chỉ gán phân hệ khác (FaceID, PPE...) -> không chạy ALPR
                             continue

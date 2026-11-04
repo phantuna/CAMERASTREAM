@@ -52,12 +52,11 @@ release_tools/
 packaging/
 build/
 manifest.json
+*.spec
 *.exe
 *.dll
 *.so
 *.dylib
-!ai_service/core/_frame_sync.so
-!ai_service/core/_frame_sync.pyd
 mediamtx/mediamtx.exe
 CameraStream-Setup.exe
 
@@ -133,4 +132,11 @@ full_diff*.txt
 Thumbs.db
 [Dd]esktop.ini
 .DS_Store
+
+# ==============================================================================
+# NGOẠI LỆ: MODULE NHỊ PHÂN XÁC THỰC ĐỒNG BỘ BẮT TAY BACKEND <-> AI SERVICE
+# ==============================================================================
+!ai_service/core/_frame_sync.pyd
+!ai_service/core/_frame_sync.so
+
 

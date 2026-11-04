@@ -497,11 +497,7 @@ public class CameraServiceImpl implements ICameraService {
                 aiConfigRepository != null ? aiConfigRepository.findByCameraIdActive(camera.getId()) : List.of();
         List<String> activeMods;
         if (configs == null || configs.isEmpty()) {
-            boolean defaultVehicle = (camera.getType() == CameraType.IN_GATE 
-                                   || camera.getType() == CameraType.OUT_GATE 
-                                   || camera.getId().equals(39L)
-                                   || (camera.getName() != null && camera.getName().contains("192.168.1.61")));
-            activeMods = defaultVehicle ? List.of("VEHICLE_ANPR") : List.of();
+            activeMods = List.of("VEHICLE_ANPR");
         } else {
             activeMods = configs.stream()
                     .filter(c -> Boolean.TRUE.equals(c.getEnabled()))

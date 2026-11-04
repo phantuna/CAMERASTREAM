@@ -56,11 +56,33 @@ class AiTrackingHub {
   private pendingCams = new Set<number>();
   private rafId: number | null = null;
 
+  // Watchdog chống đơ khung: không nhận payload mới > 1.0s thì xoá khung đang hiển thị (chỉ lớp UI)
+  private lastPayloadAt = new Map<number, number>();
+  private staleTimer: ReturnType<typeof setInterval> | null = null;
+
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
   }
 
+  private startStaleWatchdog() {
+    if (this.staleTimer) return;
+    this.staleTimer = setInterval(() => {
+      const now = Date.now();
+      this.lastPayloadAt.forEach((ts, camId) => {
+        if (now - ts <= 1000) return;
+        const st = this.states.get(camId);
+        if (st && st.tracks.length > 0) {
+          this.states.set(camId, { ...st, tracks: [], activeInRoi: false });
+          this.emit(camId);
+        }
+        this.lastPayloadAt.delete(camId);
+      });
+    }, 400);
+  }
+
   private emit(cameraId: number) {
+    if ((this.states.get(cameraId)?.tracks.length || 0) > 0) this.lastPayloadAt.set(cameraId, Date.now());
+    else this.lastPayloadAt.delete(cameraId);
     this.pendingCams.add(cameraId);
     if (this.rafId === null && typeof requestAnimationFrame !== 'undefined') {
       this.rafId = requestAnimationFrame(() => {
@@ -167,6 +189,7 @@ class AiTrackingHub {
   }
 
   private connect() {
+    this.startStaleWatchdog();
     if (this.ws || this.es || this.refCount === 0) return;
 
     // 1. ƯU TIÊN SỐ 1: Kết nối WebSocket Hub có Viewport Subscription
@@ -269,6 +292,9 @@ class AiTrackingHub {
         this.retry = null;
         if (this.pingTimer) clearInterval(this.pingTimer);
         this.pingTimer = null;
+        if (this.staleTimer) clearInterval(this.staleTimer);
+        this.staleTimer = null;
+        this.lastPayloadAt.clear();
         if (this.rafId !== null && typeof cancelAnimationFrame !== 'undefined') {
           cancelAnimationFrame(this.rafId);
           this.rafId = null;

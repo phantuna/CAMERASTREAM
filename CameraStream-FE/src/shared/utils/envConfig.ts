@@ -57,10 +57,10 @@ export function getAiServiceBaseUrl(): string {
   if (typeof window === 'undefined') return 'http://localhost:5000';
 
   const { protocol, hostname, port } = window.location;
-  if (port === '5173') {
+  if (port === '5173' || port === '8080') {
     return `${protocol}//${hostname}:5000`;
   }
-  // Khi qua Nginx, các endpoint /tracking-events và /api/roi-config được proxy trực tiếp
+  // Khi qua Nginx (port 80/443), các endpoint /tracking-events và /api/roi-config được proxy trực tiếp
   return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
 }
 

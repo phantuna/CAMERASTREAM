@@ -50,23 +50,45 @@ def _wipe_bytes(b: Optional[bytes]) -> None:
         pass
 
 
+# Khoa giai ma nhung ma hoa xao tron (XOR-obfuscated) ben trong binary C++
+# Bao ve mo hinh .enc ma khong can de lo file master.key ra ben ngoai
+_K_MASK = bytes([
+    0x5A, 0x1F, 0x88, 0x33, 0xDE, 0xAD, 0xBE, 0xEF,
+    0x42, 0x77, 0x19, 0xFA, 0xCE, 0xB0, 0x0C, 0x55,
+    0x31, 0x41, 0x59, 0x26, 0x53, 0x58, 0x97, 0x93,
+    0x23, 0x84, 0x62, 0x64, 0x33, 0x83, 0x27, 0x95
+])
+_K_DATA = bytes([
+    0xBA, 0x64, 0xCA, 0xF5, 0x72, 0x67, 0xF5, 0x30,
+    0x52, 0x4A, 0x79, 0x74, 0x6E, 0x8D, 0xCA, 0xA7,
+    0xBC, 0xA6, 0xFD, 0xC7, 0xCD, 0x21, 0x3D, 0x94,
+    0x83, 0x6A, 0x66, 0x82, 0xBA, 0xC0, 0x7F, 0xD7
+])
+
+def get_embedded_model_key() -> bytes:
+    return bytes([a ^ b for a, b in zip(_K_DATA, _K_MASK)])
+
+
 def _get_key() -> Optional[bytes]:
-    # Ban giao khach: khoa lay tu license (dung may + con han). Neu co file license
-    # thi PHAI hop le, khong am tham quay sang khoa khac.
+    # 1. Thu lay tu license cu (neu co scheme wrappedModelKey)
     try:
         from core.license_manager import find_license_path, get_model_key
-        if find_license_path().exists():
-            return get_model_key()
-    except ImportError:
+        lic_p = find_license_path()
+        if lic_p.exists():
+            key = get_model_key(lic_p)
+            if key and len(key) == 32:
+                return key
+    except Exception:
         pass
-    # Ban dev: khoa tu moi truong / file
+    # 2. Ban dev: khoa tu moi truong / file
     hex_key = os.getenv("AI_MODEL_KEY_HEX", "").strip()
     if hex_key:
         return bytes.fromhex(hex_key)
     key_file = os.getenv("AI_MODEL_KEY_FILE", "").strip()
     if key_file and Path(key_file).exists():
         return Path(key_file).read_bytes()
-    return None
+    # 3. Khóa nhúng C++ (CÁCH 1: Tự động giải mã .enc ngầm trong RAM)
+    return get_embedded_model_key()
 
 
 def resolve_model(path) -> Path:

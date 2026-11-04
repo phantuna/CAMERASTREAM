@@ -79,6 +79,8 @@ export const RoiConfigModal: FC<RoiConfigModalProps> = ({
   const [saving, setSaving] = useState<boolean>(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isVideoLive, setIsVideoLive] = useState<boolean>(false);
+  const [snapshotTime, setSnapshotTime] = useState<number>(() => Date.now());
+  const [snapshotFailed, setSnapshotFailed] = useState<boolean>(false);
 
   // Chế độ vẽ nhanh bằng cách nhấn giữ và kéo chuột (Click & Drag Box)
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
@@ -96,6 +98,8 @@ export const RoiConfigModal: FC<RoiConfigModalProps> = ({
   // Nạp toạ độ khởi tạo khi mở Modal
   useEffect(() => {
     if (isOpen) {
+      setSnapshotFailed(false);
+      setSnapshotTime(Date.now());
       if (!initializedRef.current) {
         initializedRef.current = true;
         if (initialRoi && initialRoi.length >= 3) {
@@ -861,28 +865,24 @@ export const RoiConfigModal: FC<RoiConfigModalProps> = ({
               }}
             >
               {/* 1. Ảnh Hiện Trường Chụp Gần Nhất (Phủ khít 100% khung hình video) */}
-              <img
-                src={`${effectiveAiUrl}/api/cameras/${camera.id}/snapshot?t=${Date.now()}`}
-                alt={`Ảnh mẫu hiện trường camera ${camera.name}`}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'fill',
-                  display: 'block',
-                  zIndex: 0
-                }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  const backendSnapshot = `${getBackendBaseUrl()}/api/cameras/${camera.id}/snapshot?t=${Date.now()}`;
-                  if (target.src !== backendSnapshot) {
-                    target.src = backendSnapshot;
-                  } else {
-                    target.style.display = 'none';
-                  }
-                }}
-              />
+              {!snapshotFailed && (
+                <img
+                  src={camera.snapshotApiUrl ? camera.snapshotApiUrl : `${getBackendBaseUrl()}/api/cameras/${camera.id}/snapshot?t=${snapshotTime}`}
+                  alt={`Ảnh mẫu hiện trường camera ${camera.name}`}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'fill',
+                    display: 'block',
+                    zIndex: 0
+                  }}
+                  onError={() => {
+                    setSnapshotFailed(true);
+                  }}
+                />
+              )}
 
               {/* Placeholder khi chưa nạp được ảnh */}
               <div style={{

@@ -39,7 +39,12 @@ for p in (AI_SERVICE_DIR, BASE_DIR, AI_SERVICE_DIR / "utils"):
     if p.exists() and str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-ONNX_PLATE_WEIGHTS = AI_SERVICE_DIR / "models" / "plate_det.onnx"
+try:
+    from core.model_vault import resolve_model
+    ONNX_PLATE_WEIGHTS = resolve_model(AI_SERVICE_DIR / "models" / "plate_det.onnx")
+except Exception:
+    ONNX_PLATE_WEIGHTS = AI_SERVICE_DIR / "models" / "plate_det.onnx"
+
 if not ONNX_PLATE_WEIGHTS.exists():
     sdk_weights = AI_SERVICE_DIR.parent.parent / "MODULE_AI_CONG_NGHIEP" / "SdkInfer-examples-gpu" / "models" / "plate_det.onnx"
     if sdk_weights.exists():

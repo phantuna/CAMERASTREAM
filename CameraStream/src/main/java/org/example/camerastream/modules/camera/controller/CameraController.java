@@ -118,7 +118,6 @@ public class CameraController {
         return ApiResponse.success(result);
     }
 
-    @RequirePermission("SURVEILLANCE_VIEW")
     @GetMapping("/{id}/snapshot")
     public ResponseEntity<byte[]> getSnapshot(@PathVariable Long id) {
         byte[] imageBytes = cameraService.getCameraSnapshot(id);

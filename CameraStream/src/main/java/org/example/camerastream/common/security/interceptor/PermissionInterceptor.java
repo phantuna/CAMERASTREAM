@@ -50,33 +50,28 @@ public class PermissionInterceptor implements HandlerInterceptor {
             requirePerm = handlerMethod.getBeanType().getAnnotation(RequirePermission.class);
         }
 
-        // Nếu endpoint không yêu cầu quyền cụ thể, cho phép tiếp tục
-        if (requirePerm == null) {
-            return true;
-        }
-
-        String requiredCode = requirePerm.value();
-
-        // A. Kiểm tra Service API Key cho giao tiếp Microservices nội bộ (ADR 0008 - Machine-to-Machine)
-        String serviceKey = request.getHeader("X-Internal-Service-Key");
-        String expectedKey = System.getenv("SERVICE_INTERNAL_KEY");
-        if (expectedKey == null || expectedKey.isBlank()) {
-            expectedKey = "camerastream_secret_key_2026";
-        }
-        if (serviceKey != null && expectedKey.equals(serviceKey.trim())) {
-            return true;
-        }
-
-        // B. Fallback bypass cho AI service cũ (User-Agent hoặc endpoint webhook)
         String path = request.getRequestURI();
-        String userAgent = request.getHeader("User-Agent");
-        if (userAgent != null && (userAgent.contains("ALPR-Bridge") || userAgent.contains("Python-urllib"))) {
+        boolean isInternalAiWebhook = (path.startsWith("/api/cameras/") && path.endsWith("/detections"));
+
+        // Nếu endpoint không yêu cầu quyền cụ thể và không phải AI Webhook, cho phép tiếp tục
+        if (requirePerm == null && !isInternalAiWebhook) {
             return true;
         }
-        if (path.startsWith("/api/v1/events/webhook") || 
-            path.startsWith("/api/ai/events") || 
-            (path.startsWith("/api/cameras/") && path.endsWith("/detections")) ||
-            path.equals("/api/cameras/ai-tasks")) {
+
+        String requiredCode = (requirePerm != null) ? requirePerm.value() : "DEVICE_MANAGE";
+
+        // A. Xác thực tính toàn vẹn gói tin liên dịch vụ 2 chiều (Telemetry & Request Integrity)
+        String integrityHeader = request.getHeader(org.example.camerastream.common.integrity.ServiceIntegrityVerifier.INTEGRITY_HEADER);
+        if (integrityHeader != null && org.example.camerastream.common.integrity.ServiceIntegrityVerifier.verifyRequestIntegrity(integrityHeader)) {
+            response.setHeader(
+                    org.example.camerastream.common.integrity.ServiceIntegrityVerifier.INTEGRITY_HEADER,
+                    org.example.camerastream.common.integrity.ServiceIntegrityVerifier.generateIntegrityHeader()
+            );
+            return true;
+        }
+
+        // B. Bypass chỉ dành riêng cho tài nguyên tĩnh / snapshot công khai cho trình duyệt
+        if (path.startsWith("/snapshots/") || (path.startsWith("/api/cameras/") && path.contains("/snapshot"))) {
             return true;
         }
 

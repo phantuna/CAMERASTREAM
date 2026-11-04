@@ -22,6 +22,15 @@ APP_SALT = b"hp-camerastream-lic-v1"
 CLOCK_SECRET = b"CameraStream_AI_AntiRollback_Secret_2026"
 PUBLIC_KEY_B64 = ""  # co the bi ghi de boi _license_pubkey (xem _load_public_key)
 
+RSA_MODULUS_B64 = (
+    "ngkRE8TrNYUW5hyaHEdG0B9Ez+pV28ewRYCiGxDlu5uZapISLi03JAbhdvSYP1pTjU3o2+ygMOxyCKjt4QA0iXQ6qhGsPKAJP5tASkCbHaqc7pyJb2+lpVkT"
+    "iusMl+XJTXJPsfdUMkusP43hHUO4NdXV+yDvWhzOKfkjhIvLv5au2DttvQmluxCqmHPbwygt4sZjmqR7EIPtMRBFe5tPUN6045dVpBQXeKr6joTbkPB9/XtTl"
+    "MjOcq1e4JfTHTJw9AyMRGoDlSVkMiaIQCfR6GLs0nfUbfWzpvm998UrYHZWaWJCIkZF7HOYb9t23OJzJ/jFN9q2tZ2jGy4keP9OkYSgoNMC1MiCUMXeXRIid"
+    "NVxIp9VtcBV/Il1sxZVzoXX/k0K6WQaOu2EM2sD06U8Hi9CUgBFSX1MT0ie9OnzWk1ALC8mzF6efuTgalp600DRn5ZFCHIWb+2Yz179Y6VZ7H8/+46ZDQJxu"
+    "feVNMXN2rQo/iS7qW+WzS/KJ2SC/EEh"
+)
+RSA_EXPONENT_B64 = "AQAB"
+
 _WMI_PS = (
     "$ErrorActionPreference='SilentlyContinue';"
     "function F($c,$p){foreach($o in Get-CimInstance $c){$v=$o.$p;if($v){$s=([string]$v).Trim();"
@@ -154,16 +163,83 @@ def _check_clock_rollback(license_file: Path, now_utc: datetime) -> None:
         pass
 
 
+def _load_px_lic(raw_str: str, p: Path) -> dict:
+    """Xac minh license dinh dang PX-LIC- do HPLicenseTool phat hanh (RSA-3072 PKCS1v15 SHA-256)."""
+    from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
+    from cryptography.hazmat.primitives.asymmetric import padding
+    from cryptography.hazmat.primitives import hashes
+
+    try:
+        b64_content = raw_str[len("PX-LIC-"):].strip()
+        decoded = base64.b64decode(b64_content).decode("utf-8")
+        parts = decoded.split("|||")
+        if len(parts) != 2:
+            raise LicenseError("Dinh dang file license PX-LIC- khong hop le")
+        payload_str, sig_b64 = parts[0], parts[1]
+    except Exception as e:
+        raise LicenseError(f"Khong the giai ma file license PX-LIC-: {e}")
+
+    try:
+        mod = int.from_bytes(base64.b64decode(RSA_MODULUS_B64), "big")
+        exp = int.from_bytes(base64.b64decode(RSA_EXPONENT_B64), "big")
+        pub = RSAPublicNumbers(exp, mod).public_key()
+        pub.verify(base64.b64decode(sig_b64), payload_str.encode("utf-8"), padding.PKCS1v15(), hashes.SHA256())
+    except Exception:
+        raise LicenseError("Chu ky so RSA-3072 cua License khong hop le! File da bi chinh sua trai phep.")
+
+    try:
+        payload = json.loads(payload_str)
+    except Exception:
+        raise LicenseError("Noi dung payload trong license khong phai JSON hop le")
+
+    lic_mc = payload.get("MachineCode", "").strip().upper()
+    curr_mc = hardware_code().strip().upper()
+    if lic_mc != curr_mc:
+        raise LicenseError(f"License khong danh cho may nay (cap cho {lic_mc}, may hien tai: {curr_mc})")
+
+    is_perm = payload.get("IsPermanent", False)
+    if not is_perm:
+        exp_str = payload.get("ExpiryDate", "")
+        if exp_str:
+            try:
+                if exp_str.endswith("Z"):
+                    exp_dt = datetime.fromisoformat(exp_str.replace("Z", "+00:00"))
+                elif "+" in exp_str or ("-" in exp_str[10:]):
+                    exp_dt = datetime.fromisoformat(exp_str)
+                else:
+                    exp_dt = datetime.fromisoformat(exp_str).replace(tzinfo=timezone.utc)
+                now_utc = datetime.now(timezone.utc)
+                if now_utc > exp_dt:
+                    raise LicenseError(f"License da HET HAN tu ngay {exp_str}")
+            except LicenseError:
+                raise
+            except Exception:
+                pass
+
+    _check_clock_rollback(p, datetime.now(timezone.utc))
+    payload["customerId"] = payload.get("CustomerName", "")
+    payload["expiresAt"] = payload.get("ExpiryDate", "")
+    return payload
+
+
 def load_license(path: Optional[Path] = None) -> dict:
-    """Xac minh chu ky, may, han dung va chong tua lui dong ho. Tra ve payload hop le hoac nem LicenseError."""
+    """Xac minh chu ky, may, han dung va chong tua lui dong ho. Tra ve payload hop le hoac nem LicenseError.
+    Ho tro ca 2 dinh dang:
+    1. Dinh dang chuan HPLicenseTool: PX-LIC-... (RSA-3072)
+    2. Dinh dang Ed25519 JSON
+    """
     from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
     p = Path(path) if path else find_license_path()
     if not p.exists():
         raise LicenseError(f"Khong tim thay license: {p}")
+    raw_content = p.read_text(encoding="utf-8").replace("\ufeff", "").strip()
+    if raw_content.startswith("PX-LIC-"):
+        return _load_px_lic(raw_content, p)
+
     try:
-        doc = json.loads(p.read_text(encoding="utf-8"))
+        doc = json.loads(raw_content)
         payload, sig = doc["payload"], base64.b64decode(doc["signature"])
     except Exception:
         raise LicenseError("File license hong")

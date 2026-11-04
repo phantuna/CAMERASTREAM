@@ -91,29 +91,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           zIndex: 10
         }}
       >
-        {/* Logo/Brand matching HPTicket */}
+        {/* Logo/Brand */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '16px 28px',
+              padding: '16px 32px',
               backgroundColor: '#FFFFFF',
-              borderRadius: '24px',
-              boxShadow: '0 20px 35px -10px rgba(148, 163, 184, 0.45)',
+              borderRadius: '20px',
+              boxShadow: '0 20px 35px -10px rgba(148, 163, 184, 0.45), 0 0 0 1px rgba(226, 232, 240, 0.8)',
               marginBottom: '14px',
-              border: '1px solid rgba(226, 232, 240, 0.8)',
               backdropFilter: 'blur(8px)'
             }}
           >
             <img
-              src="/hoang-phat-invoice-logo.png"
+              src="/hoang-phat-brand-logo.png"
               alt="Hoàng Phát Technology Era"
-              style={{ height: '76px', width: 'auto', maxWidth: '220px', objectFit: 'contain' }}
+              style={{ height: '62px', width: 'auto', maxWidth: '280px', objectFit: 'contain', display: 'block' }}
             />
           </div>
-          <p style={{ color: '#334155', margin: 0, fontSize: '13.5px', fontWeight: 700, textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)' }}>
+          <p style={{ color: '#1E293B', margin: 0, fontSize: '14px', fontWeight: 700, textShadow: '0 1px 2px rgba(255, 255, 255, 0.9)' }}>
             Hệ Thống Giám Sát Camera & Kiểm Soát Xe Thông Minh
           </p>
         </div>

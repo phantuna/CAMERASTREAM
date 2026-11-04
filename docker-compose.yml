@@ -98,9 +98,13 @@ services:
       - SNAPSHOT_BASE_URL=http://${HOST_IP:-localhost}:8080/snapshots
       - BACKUP_STORAGE_PATH=/data/backup
       - SERVICE_INTERNAL_KEY=camerastream_secret_key_2026
+      - LICENSE_ENFORCE=false
+      - MACHINE_CODE=PX-1972-D91F-0184-9DBA
+      - LICENSE_PATH=/app/license/license.lic
     volumes:
       - ./data/snapshots:/data/snapshots
       - ./data/backup:/data/backup
+      - ./deploy/license:/app/license:ro
     ports:
       - "8080:8080"
     depends_on:

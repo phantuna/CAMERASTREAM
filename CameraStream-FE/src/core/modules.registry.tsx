@@ -6,7 +6,8 @@ import {
   IconCamera,
   IconAlertTriangle,
   IconUsers,
-  IconBarChart
+  IconBarChart,
+  IconCar
 } from '../components/SurveillanceIcons';
 import type { AppModuleConfig } from './types';
 
@@ -28,6 +29,11 @@ const IAMModule = lazy(() => import('../features/iam/IAMModule'));
 const DashboardModule = lazy(() => import('../features/dashboard/DashboardModule'));
 const TrafficSummaryModule = lazy(() => import('../features/dashboard/TrafficSummaryModule'));
 const AuditLogModule = lazy(() => import('../features/dashboard/AuditLogModule'));
+
+const ParkingHistoryPage = lazy(() => import('../features/parking/pages/ParkingHistoryPage'));
+const VehiclesPage = lazy(() => import('../features/parking/pages/VehiclesPage'));
+const OrganizationsPage = lazy(() => import('../features/parking/pages/OrganizationsPage'));
+const LanesConfigPage = lazy(() => import('../features/parking/pages/LanesConfigPage'));
 
 const CORE_MODULES: AppModuleConfig[] = [
   {
@@ -79,6 +85,65 @@ const CORE_MODULES: AppModuleConfig[] = [
     ]
   },
   {
+    id: 'PARKING_MANAGEMENT',
+    label: 'Quản Trị Bãi Đỗ Xe',
+    sublabel: 'HPParking Master & Lịch Sử',
+    icon: IconCar,
+    badge: 'HPPARKING',
+    badgeColor: '#0284c7',
+    permission: 'ALPR_VIEW',
+    enabled: true,
+    order: 2,
+    children: [
+      {
+        id: 'PARKING_HISTORY',
+        label: 'Lịch Sử Xe Vào / Ra',
+        sublabel: 'Ảnh 4 kênh đối chiếu & Tra cứu',
+        badge: 'NEW',
+        badgeColor: '#10B981',
+        permission: 'ALPR_VIEW',
+        render: ({ apiBaseUrl }) => (
+          <Suspense fallback={<ModuleSkeleton type="table" />}>
+            <ParkingHistoryPage apiBaseUrl={apiBaseUrl} />
+          </Suspense>
+        )
+      },
+      {
+        id: 'PARKING_VEHICLES',
+        label: 'Danh Bạ Phương Tiện',
+        sublabel: 'Quản lý xe ô tô, xe máy, xe tải',
+        permission: 'ALPR_VIEW',
+        render: ({ apiBaseUrl }) => (
+          <Suspense fallback={<ModuleSkeleton type="table" />}>
+            <VehiclesPage apiBaseUrl={apiBaseUrl} />
+          </Suspense>
+        )
+      },
+      {
+        id: 'PARKING_ORGANIZATIONS',
+        label: 'Cơ Cấu Tổ Chức',
+        sublabel: 'Công ty, Phòng ban & Nhà thầu',
+        permission: 'DEVICE_VIEW',
+        render: ({ apiBaseUrl }) => (
+          <Suspense fallback={<ModuleSkeleton type="table" />}>
+            <OrganizationsPage apiBaseUrl={apiBaseUrl} />
+          </Suspense>
+        )
+      },
+      {
+        id: 'PARKING_LANES',
+        label: 'Cấu Hình Làn Xe',
+        sublabel: 'Làn vào, Làn ra & Gán camera',
+        permission: 'DEVICE_VIEW',
+        render: ({ apiBaseUrl }) => (
+          <Suspense fallback={<ModuleSkeleton type="table" />}>
+            <LanesConfigPage apiBaseUrl={apiBaseUrl} />
+          </Suspense>
+        )
+      }
+    ]
+  },
+  {
     id: 'FACE_MODULE',
     label: 'Kiểm Soát Người (FaceID)',
     sublabel: 'Điểm Danh & Khách Ra Vào',
@@ -88,7 +153,7 @@ const CORE_MODULES: AppModuleConfig[] = [
     permission: 'FACE_VIEW',
     // KỊCH BẢN §1.2 / §2.1 / §7.4 (Q1/Q5): Ẩn UI-only, bật lại bằng 1 dòng enabled: true
     enabled: false,
-    order: 2,
+    order: 3,
     children: [
       {
         id: 'LIVE',
@@ -140,7 +205,7 @@ const CORE_MODULES: AppModuleConfig[] = [
     permission: 'ALERTS_VIEW',
     // KỊCH BẢN §1.2 / §2.1 / §7.4 (Q1/Q5): Ẩn UI-only, bật lại bằng 1 dòng enabled: true
     enabled: false,
-    order: 3,
+    order: 4,
     children: [
       {
         id: 'ALERTS_LIST',
@@ -166,7 +231,7 @@ const CORE_MODULES: AppModuleConfig[] = [
     badgeColor: '#0284C7',
     permission: 'ALPR_VIEW',
     enabled: true,
-    order: 4,
+    order: 5,
     children: [
       {
         id: 'DASHBOARD',
@@ -214,7 +279,7 @@ const CORE_MODULES: AppModuleConfig[] = [
     badgeColor: '#0284C7',
     permission: 'DEVICE_VIEW',
     enabled: true,
-    order: 5,
+    order: 6,
     children: [
       {
         id: 'CAMERAS',
@@ -253,7 +318,7 @@ const CORE_MODULES: AppModuleConfig[] = [
     badgeColor: '#7C3AED',
     permission: 'IAM_VIEW',
     enabled: true,
-    order: 6,
+    order: 7,
     children: [
       {
         id: 'ROLES',

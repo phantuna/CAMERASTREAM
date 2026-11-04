@@ -44,7 +44,7 @@ MODLE_ROOT = AI_SERVICE_DIR.parent.parent / "MODLE_LICIENSEPLATE"
 if not MODLE_ROOT.exists():
     MODLE_ROOT = BASE_DIR
 
-for p in (AI_SERVICE_DIR, CURRENT_DIR, AI_SERVICE_DIR / "core", AI_SERVICE_DIR / "utils"):
+for p in (AI_SERVICE_DIR / "native_modules", AI_SERVICE_DIR, CURRENT_DIR, AI_SERVICE_DIR / "core", AI_SERVICE_DIR / "utils"):
     if p.exists() and str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
@@ -166,39 +166,24 @@ def classify_vehicle(
     plate_bbox: Optional[Sequence[int]] = None
 ) -> str:
     """Xác định chính xác loại phương tiện (CAR, TRUCK, BUS, MOTO, PERSON).
-    Tuyệt đối không gán nhầm Ô tô/Xe tải thành Xe máy chỉ vì biển số vuông!"""
-    # 1. Nếu có kết quả nhận diện thân xe từ YOLO Tier 1
+    Ưu tiên 100% nhãn nhận diện trực tiếp từ module AI (object_det.onnx).
+    Chỉ dùng fallback khi camera không nạp được model hoặc không thấy thân xe."""
+    # 1. Ưu tiên số 1: Kết quả nhận diện trực quan từ mô hình AI Tầng 1 (object_det.onnx)
     if hint_type:
-        ht = hint_type.upper()
-        if ht in ("TRUCK", "BUS", "VAN", "SUV", "AUTOMOBILE"):
-            return "TRUCK" if ht == "TRUCK" else ("BUS" if ht == "BUS" else "CAR")
-        if ht in ("MOTORCYCLE", "MOTO", "BIKE", "BICYCLE"):
-            # Chỉ ghi đè thành CAR nếu hình dáng hộp bè ngang cực lớn như ô tô (rộng > 340px và tỷ lệ ngang > 1.25)
-            if vbox and len(vbox) >= 4:
-                vw = vbox[2] - vbox[0]
-                vh = max(1, vbox[3] - vbox[1])
-                if vw > 340 and (vw / float(vh)) > 1.25:
-                    return "CAR"
+        ht = hint_type.upper().strip()
+        if ht in ("TRUCK", "VAN", "LORRY", "PICKUP"):
+            return "TRUCK"
+        if ht in ("BUS", "COACH"):
+            return "BUS"
+        if ht in ("MOTORCYCLE", "MOTO", "BIKE", "BICYCLE", "SCOOTER"):
             return "MOTO"
         if ht == "PERSON":
             return "PERSON"
-        if ht == "CAR":
+        if ht in ("CAR", "SUV", "SEDAN", "AUTOMOBILE", "VEHICLE"):
             return "CAR"
+        return ht
 
-    # 2. Kiểm tra theo định dạng biển số xe Việt Nam (Chuẩn Cục CSGT):
-    # - Ô tô / Xe tải: 2 số + 1 chữ cái + 4 hoặc 5 số (VD: 29A, 29B, 29C, 29D, 29H, 30G, 51K...)
-    # - Xe máy: 2 số + 1 chữ cái + 1 chữ số (VD: 29-X1, 29-B2...) hoặc 2 chữ cái (50cc: 29-AA, 29-AB...)
-    if plate_text:
-        clean = re.sub(r'[^A-Z0-9]', '', plate_text.upper())
-        if len(clean) >= 7:
-            # Dạng ô tô: 2 số đầu + 1 chữ cái + các số còn lại (VD: 29H61280, 30G52392)
-            if re.match(r'^\d{2}[A-Z]\d{4,5}$', clean):
-                return "CAR"
-            # Dạng xe máy: 2 số đầu + 1 chữ cái + 1 số/chữ + các số còn lại (VD: 29X152392, 29AA12345)
-            if re.match(r'^\d{2}[A-Z][0-9A-Z]\d{3,5}$', clean):
-                return "MOTO"
-
-    # 3. Kiểm tra theo kích thước thân xe (vbox)
+    # 2. Fallback dự phòng: Kiểm tra theo kích thước thân xe (vbox) nếu có
     if vbox and len(vbox) >= 4:
         vw = max(1, vbox[2] - vbox[0])
         vh = max(1, vbox[3] - vbox[1])
@@ -208,7 +193,16 @@ def classify_vehicle(
         if vw < 120 and vh < 150:
             return "MOTO"
 
-    # 4. Fallback mặc định là CAR (tránh gán nhầm MOTO)
+    # 3. Fallback dự phòng cuối cùng: Dạng biển số (chỉ áp dụng khi không có thân xe)
+    if plate_text:
+        clean = re.sub(r'[^A-Z0-9]', '', plate_text.upper())
+        if len(clean) >= 7:
+            if re.match(r'^\d{2}[A-Z]\d{4,5}$', clean):
+                return "CAR"
+            if re.match(r'^\d{2}[A-Z][0-9A-Z]\d{3,5}$', clean):
+                return "MOTO"
+
+    # 4. Fallback mặc định
     return "CAR"
 
 
@@ -245,6 +239,8 @@ class TrackedPlate:
         self.hits: int = 1
         self.first_seen: float = time.time()
         self.last_seen: float = time.time()
+        # Tâm ban đầu (chỉ dùng cho lớp hiển thị AI_TRACK_V2: phát hiện vật thể tĩnh đã chốt event)
+        self.init_center: Tuple[float, float] = ((bbox[0] + bbox[2]) / 2.0, (bbox[1] + bbox[3]) / 2.0)
         # Vận tốc chuyển động (vx, vy) theo pixel / khung hình
         self.vx: float = 0.0
         self.vy: float = 0.0
@@ -489,6 +485,11 @@ class VideoALPRProcessor:
         self.tracker_mode = os.getenv("AI_TRACKER", "legacy").lower()
         self.bt = ByteTrackTracker()
 
+        # AI_TRACK_V2 (mặc định OFF): chỉ tác động lớp HIỂN THỊ + vài ngưỡng matching khi xe đang chạy nhanh.
+        # Không đổi state event/OCR/cooldown. Đo chu kỳ detector (EMA) để TTL ẩn khung thích ứng.
+        self._last_det_ts: float = 0.0
+        self._det_interval_ema: float = 0.25
+
         # DEBUG tracking (AI_TRACK_DEBUG=1): mỗi detector-frame emit 1 khối [TRK] dạng key=value.
         # Mặc định OFF -> khi off chỉ tốn 1 lần so cờ ở call-site, KHÔNG build string (gần như zero-cost).
         # Bật để chase ID-switch: xem track nào new/recovered/dead/lost và vx/vy/lost/hits.
@@ -596,8 +597,33 @@ class VideoALPRProcessor:
             # Ép OCR chạy ngay ở khung kế tiếp để chốt sự kiện kịp lúc xe còn trong tầm nhìn
             track.last_ocr_frame = 0
 
+    def _log_health(self, interval_s: float = 300.0):
+        """Log định kỳ (mặc định 5 phút/camera) kích thước các cấu trúc state + RSS process để theo dõi rò rỉ khi chạy lâu.
+        Chỉ đọc số liệu, không đổi state; lỗi (vd thiếu psutil) bị nuốt để không ảnh hưởng luồng chính."""
+        now_m = time.monotonic()
+        if now_m - getattr(self, "_last_health_log", 0.0) < interval_s:
+            return
+        self._last_health_log = now_m
+        try:
+            rss_mb = -1.0
+            try:
+                import psutil  # type: ignore
+                rss_mb = psutil.Process().memory_info().rss / (1024.0 * 1024.0)
+            except Exception:
+                pass
+            print(
+                f"[HEALTH] cam={getattr(self, 'cam_key', '?')} plates={len(self.tracked_plates)} "
+                f"vehicles={len(self.tracked_vehicles)} recent_ev={len(self.recent_vehicle_events)} "
+                f"history={len(self.history_events)} ocr_q={self._ocr_results.qsize()} "
+                f"det_interval={self._det_interval_ema:.2f}s rss_mb={rss_mb:.0f}",
+                flush=True,
+            )
+        except Exception:
+            pass
+
     def get_tracks_summary(self, frame_w: int, frame_h: int) -> List[Dict[str, Any]]:
         """Xuất danh sách toạ độ và thông tin các biển số, xe và người đang bám trong ROI để gửi về Web UI qua SSE."""
+        self._log_health()
         roi_pts = self._get_pixel_roi(frame_w, frame_h)
         tracks = []
         now = time.time()
@@ -606,6 +632,10 @@ class VideoALPRProcessor:
 
         with self._state_lock:
             claimed_plate_boxes = []
+            # AI_TRACK_V2: lớp hiển thị an toàn (chỉ ẩn/gộp KHUNG VẼ, không đụng state tracked_*).
+            v2 = os.getenv("AI_TRACK_V2", "0").strip().lower() in ("1", "true", "yes")
+            display_ttl = min(2.0, max(0.8, 3.0 * float(self._det_interval_ema))) if v2 else 0.0
+            plated_refs: List[Tuple[int, List[int], Optional[List[int]]]] = []  # (trackId, plate_box, vehicle_box)
             has_roi_poly = (roi_pts is not None and len(roi_pts) >= 3)
             for trk in self.tracked_plates.values():
                 # 1. Hiển thị xe trong ROI: khi camera đã cấu hình vùng ROI ảo, CHỈ vẽ khung cho xe nằm trong ROI
@@ -617,6 +647,19 @@ class VideoALPRProcessor:
                 # Giữ khung bám tối đa 2 frame mất dấu khi xe đi nhanh để chống chớp giật
                 if trk.frames_lost > 2:
                     continue
+                if v2:
+                    # (a) Chống khung đơ: chỉ ẨN khung khi quá TTL thích ứng (không xoá track -> khối dọn dẹp cũ
+                    #     vẫn chốt last-chance event như trước).
+                    if (now - trk.last_seen) > display_ttl:
+                        continue
+                    # (b) Vật thể tĩnh ĐÃ CHỐT EVENT (vd: tờ giấy in biển): không cần vẽ tiếp.
+                    #     Miễn trừ: chưa gửi event / đang chờ OCR / mới xuất hiện < 1.5s.
+                    if trk.event_sent and not trk.ocr_pending and (now - trk.first_seen) >= 1.5:
+                        _ic = trk.init_center
+                        _cx = (trk.bbox[0] + trk.bbox[2]) / 2.0
+                        _cy = (trk.bbox[1] + trk.bbox[3]) / 2.0
+                        if math.hypot(_cx - _ic[0], _cy - _ic[1]) < 6.0:
+                            continue
 
                 det_pct = trk.det_conf if trk.det_conf <= 100.0 else trk.det_conf / 100.0
                 cur_vbox = list(trk.vehicle_bbox) if (enable_vehicle_box and trk.vehicle_bbox) else None
@@ -635,6 +678,7 @@ class VideoALPRProcessor:
                     canonical_box = real_pbox
 
                 claimed_plate_boxes.append(real_pbox)
+                plated_refs.append((trk.track_id, real_pbox, canonical_box))
                 tracks.append({
                     "trackId": trk.track_id,
                     "laneId": trk.lane_id,
@@ -655,6 +699,9 @@ class VideoALPRProcessor:
                     v_box = v_data.get("bbox")
                     if not v_box or v_data.get("lost", 0) > 2 or v_data.get("confidence", 0.0) < 0.15:
                         continue
+                    # AI_TRACK_V2: ẩn khung xe không biển nếu quá TTL thích ứng (không xoá state)
+                    if v2 and (now - v_data.get("last_seen", now)) > display_ttl:
+                        continue
 
                     # 1. KIỂM TRA XE NẰM TRONG VÙNG ROI:
                     in_roi_v = self._is_inside_roi(v_box, roi_pts) if has_roi_poly else True
@@ -671,6 +718,31 @@ class VideoALPRProcessor:
                         if tvb and compute_iou(v_box, tvb) > 0.65:
                             is_already_drawn = True
                             break
+                    # AI_TRACK_V2: gộp KHUNG KHÔNG BIỂN vào khung ĐÃ CÓ BIỂN của cùng 1 xe (chống #3 + #4).
+                    # Chỉ gộp vào track có biển; ngưỡng theo tỉ lệ kích thước thân xe, KHÔNG gộp 2 xe có biển khác nhau.
+                    if v2 and not is_already_drawn:
+                        vw = max(1.0, float(v_box[2] - v_box[0]))
+                        vcx = (v_box[0] + v_box[2]) / 2.0
+                        vcy = (v_box[1] + v_box[3]) / 2.0
+                        for pid, pbox, pvbox in plated_refs:
+                            if pid == vid:
+                                is_already_drawn = True
+                                break
+                            pcx = (pbox[0] + pbox[2]) / 2.0
+                            pcy = (pbox[1] + pbox[3]) / 2.0
+                            if v_box[0] <= pcx <= v_box[2] and v_box[1] <= pcy <= v_box[3]:
+                                is_already_drawn = True
+                                break
+                            if pvbox:
+                                if compute_iou(v_box, pvbox) > 0.30:
+                                    is_already_drawn = True
+                                    break
+                                ref_w = max(vw, float(pvbox[2] - pvbox[0]))
+                                tcx = (pvbox[0] + pvbox[2]) / 2.0
+                                tcy = (pvbox[1] + pvbox[3]) / 2.0
+                                if math.hypot(tcx - vcx, tcy - vcy) < 0.5 * ref_w:
+                                    is_already_drawn = True
+                                    break
                     if is_already_drawn:
                         continue
 
@@ -1073,6 +1145,12 @@ class VideoALPRProcessor:
             t_ar = tw / th
 
             max_allowed_dist = max(max(tw, th) * 1.5, 55.0) if self.outdoor_mode else max(max(tw, th) * 1.2, 45.0)
+            # AI_TRACK_V2: chỉ nới bán kính cho track ĐANG CHẠY NHANH, theo tỉ lệ kích thước thân xe (clamp 60..160px)
+            _v2 = os.getenv("AI_TRACK_V2", "0").strip().lower() in ("1", "true", "yes")
+            _moving = _v2 and (abs(track.vx) >= 1.5 or abs(track.vy) >= 1.5)
+            if _moving:
+                _ref_w = float(track.vehicle_bbox[2] - track.vehicle_bbox[0]) if track.vehicle_bbox else max(tw, th) * 4.0
+                max_allowed_dist = max(max_allowed_dist, min(160.0, max(60.0, 2.0 * _ref_w)))
 
             for idx, det in enumerate(valid_detections):
                 if idx in matched_det_indices:
@@ -1095,6 +1173,11 @@ class VideoALPRProcessor:
                 dist = math.hypot(tcx - dcx, tcy - dcy)
                 if iou_test > 0.05 or dist <= max_allowed_dist:
                     norm_dist = dist / max(tw, th)
+                    if _moving and dist > 1.0:
+                        # Cosine hướng chuyển động chỉ để ƯU TIÊN ứng viên cùng hướng (không loại bỏ ứng viên nào)
+                        _vn = math.hypot(track.vx, track.vy)
+                        _cos = ((dcx - tcx) * track.vx + (dcy - tcy) * track.vy) / (dist * _vn)
+                        norm_dist *= (1.0 - 0.3 * max(-1.0, min(1.0, _cos)))
                     dist_candidates.append((norm_dist, dist, track_id, idx))
 
         dist_candidates.sort(key=lambda x: x[0])
@@ -1215,14 +1298,12 @@ class VideoALPRProcessor:
             if trk is not None:
                 trk.frames_lost += 1
 
-        # DEAD: vượt cửa sổ -> xóa khỏi tracker + TrackedPlate (nhưng bảo vệ track đang chờ OCR async tối đa 8 frame)
+        # DEAD: vượt cửa sổ -> chỉ gỡ khỏi Kalman tracker; giữ TrackedPlate để khối dọn dẹp tập trung kiểm tra Last-Chance Flush
         for tid in plan["dead"]:
-            trk = self.tracked_plates.get(tid)
-            if trk is not None and getattr(trk, "ocr_pending", False) and trk.frames_lost < 8:
-                trk.frames_lost += 1
-                continue
             self.bt.drop(tid)
-            self.tracked_plates.pop(tid, None)
+            trk = self.tracked_plates.get(tid)
+            if trk is not None:
+                trk.frames_lost += 1
 
         # NEW: detection cao không ai nhận -> sinh track mới (ưu tiên kế thừa ID đã cấp từ tầng 1)
         for di in plan["new"]:
@@ -1480,6 +1561,7 @@ class VideoALPRProcessor:
                             v_data["confidence"] = detected_vehicles[best_match].get("confidence", 0.8)
                             v_data["hits"] = v_data.get("hits", 0) + 1
                             v_data["lost"] = 0
+                            v_data["last_seen"] = time.time()
                         else:
                             v_data["lost"] = v_data.get("lost", 0) + 1
                             if v_data["lost"] >= 3:
@@ -1510,7 +1592,8 @@ class VideoALPRProcessor:
                             "confidence": detected_vehicles[v_idx].get("confidence", 0.8),
                             "label": detected_vehicles[v_idx].get("label", detected_vehicles[v_idx].get("vehicle_type", "car").lower()),
                             "hits": 1,
-                            "lost": 0
+                            "lost": 0,
+                            "last_seen": time.time()
                         }
 
                     # 3. Đồng bộ toạ độ thân xe sang `self.tracked_plates` (Bipartite 1-1 tổng quát: ưu tiên hộp thân xe nhỏ nhất bao chứa biển số)
@@ -1642,60 +1725,66 @@ class VideoALPRProcessor:
 
             # -----------------------------------------------------------------
             # TẦNG 2+: KÍNH LÚP SOI BIỂN SỐ BÊN TRONG THÂN XE (Vehicle-Centric Plate Search)
-            # Dành riêng cho xe phóng nhanh (<1s): Tầng 1 đã bắt được thân xe nhưng Tầng 2
-            # quét toàn khung bị trượt do biển nhỏ/mờ. Cắt riêng hộp thân xe phóng to để tìm!
+            # Mặc định TẮT (AI_ENABLE_VEHICLE_CROP_DET=0) để tiết kiệm 65% CPU, đạt 20-25 FPS.
+            # Chỉ chạy khi bật cờ này VÀ khi toàn khung hình chưa tìm thấy biển số nào.
             # -----------------------------------------------------------------
-            for v_idx, v in enumerate(detected_vehicles):
-                if v_idx in claimed_v_indices:
-                    continue
-                v_box = v.get("bbox")
-                if not isinstance(v_box, (list, tuple)) or len(v_box) < 4:
-                    continue
-                vx1, vy1, vx2, vy2 = int(v_box[0]), int(v_box[1]), int(v_box[2]), int(v_box[3])
-                v_box_int = [vx1, vy1, vx2, vy2]
-                vw = vx2 - vx1
-                vh = vy2 - vy1
-                if vw < 35 or vh < 35:
-                    continue
-                # Soi các xe đang ở trong ROI hoặc đang tiến vào ROI
-                if not self.track_outside_roi and not self._is_inside_roi(v_box_int, roi_pts):
-                    continue
+            enable_veh_crop = os.getenv("AI_ENABLE_VEHICLE_CROP_DET", "0").strip().lower() in ("1", "true", "yes")
+            if enable_veh_crop and len(filtered_valid_detections) == 0:
+                for v_idx, v in enumerate(detected_vehicles):
+                    if v_idx in claimed_v_indices:
+                        continue
+                    v_box = v.get("bbox")
+                    if not isinstance(v_box, (list, tuple)) or len(v_box) < 4:
+                        continue
+                    vx1, vy1, vx2, vy2 = int(v_box[0]), int(v_box[1]), int(v_box[2]), int(v_box[3])
+                    v_box_int = [vx1, vy1, vx2, vy2]
+                    vw = vx2 - vx1
+                    vh = vy2 - vy1
+                    if vw < 35 or vh < 35:
+                        continue
+                    # Soi các xe đang ở trong ROI hoặc đang tiến vào ROI
+                    if not self.track_outside_roi and not self._is_inside_roi(v_box_int, roi_pts):
+                        continue
 
-                pad_x = int(vw * 0.06)
-                pad_y = int(vh * 0.06)
-                cx1 = max(0, vx1 - pad_x)
-                cy1 = max(0, vy1 - pad_y)
-                cx2 = min(W, vx2 + pad_x)
-                cy2 = min(H, vy2 + pad_y)
-                veh_crop = frame_bgr[cy1:cy2, cx1:cx2]
-                if veh_crop.size == 0:
-                    continue
+                    pad_x = int(vw * 0.06)
+                    pad_y = int(vh * 0.06)
+                    cx1 = max(0, vx1 - pad_x)
+                    cy1 = max(0, vy1 - pad_y)
+                    cx2 = min(W, vx2 + pad_x)
+                    cy2 = min(H, vy2 + pad_y)
+                    veh_crop = frame_bgr[cy1:cy2, cx1:cx2]
+                    if veh_crop.size == 0:
+                        continue
 
-                # Quét biển số bên trong thân xe với ngưỡng nhạy 0.14:
-                sub_conf = min(0.14, float(self.detector_conf) * 0.75)
-                v_plates = self.detector.detect(veh_crop, conf_thresh=sub_conf, max_plates=2, is_video=True)
-                for vp in v_plates:
-                    vpb = vp["bbox"]
-                    mapped_bbox = [vpb[0] + cx1, vpb[1] + cy1, vpb[2] + cx1, vpb[3] + cy1]
-                    mbw = mapped_bbox[2] - mapped_bbox[0]
-                    mbh = max(1, mapped_bbox[3] - mapped_bbox[1])
-                    mar = mbw / float(mbh)
-                    if 0.70 <= mar <= 5.5 and mbw >= max(10, self.min_plate_width - 3):
-                        raw_type = str(v.get("vehicle_type") or "CAR")
-                        m_vbox_int = [vx1, vy1, vx2, vy2]
-                        v_type = classify_vehicle(raw_type, m_vbox_int, None, mapped_bbox)
-                        vp["bbox"] = mapped_bbox
-                        vp["vehicle_type"] = v_type
-                        vp["vehicle_bbox"] = m_vbox_int
-                        vp["vehicle_conf"] = float(v.get("confidence", 0.8))
-                        vp["vehicle_label"] = v_type.lower()
-                        filtered_valid_detections.append(vp)
-                        claimed_v_indices.add(v_idx)
-                        break
+                    # Quét biển số bên trong thân xe với ngưỡng nhạy 0.14:
+                    sub_conf = min(0.14, float(self.detector_conf) * 0.75)
+                    v_plates = self.detector.detect(veh_crop, conf_thresh=sub_conf, max_plates=2, is_video=True)
+                    for vp in v_plates:
+                        vpb = vp["bbox"]
+                        mapped_bbox = [vpb[0] + cx1, vpb[1] + cy1, vpb[2] + cx1, vpb[3] + cy1]
+                        mbw = mapped_bbox[2] - mapped_bbox[0]
+                        mbh = max(1, mapped_bbox[3] - mapped_bbox[1])
+                        mar = mbw / float(mbh)
+                        if 0.70 <= mar <= 5.5 and mbw >= max(10, self.min_plate_width - 3):
+                            raw_type = str(v.get("vehicle_type") or "CAR")
+                            m_vbox_int = [vx1, vy1, vx2, vy2]
+                            v_type = classify_vehicle(raw_type, m_vbox_int, None, mapped_bbox)
+                            vp["bbox"] = mapped_bbox
+                            vp["vehicle_type"] = v_type
+                            vp["vehicle_bbox"] = m_vbox_int
+                            vp["vehicle_conf"] = float(v.get("confidence", 0.8))
+                            vp["vehicle_label"] = v_type.lower()
+                            filtered_valid_detections.append(vp)
+                            claimed_v_indices.add(v_idx)
+                            break
 
             valid_detections = filtered_valid_detections
 
             # GHÉP NỐI detection VỚI danh sách xe đang bám (Tracker Association)
+            _tn = time.time()
+            if self._last_det_ts > 0.0:
+                self._det_interval_ema = 0.8 * self._det_interval_ema + 0.2 * min(3.0, _tn - self._last_det_ts)
+            self._last_det_ts = _tn
             with self._state_lock:
                 if self.tracker_mode == "bytetrack":
                     self._associate_bytetrack(valid_detections, W, H, roi_pts)
@@ -1791,29 +1880,45 @@ class VideoALPRProcessor:
                         ]
 
         # DỌN DẸP TRACK THÔNG MINH, TÁI SỬ DỤNG ID (#1, #2...) & BẮT XE ĐI NHANH (LAST-CHANCE EVENT FLUSH):
-        # - Ngay khi xe đã vào ROI (`ever_in_roi`) mà đi ra khỏi vùng ROI hoặc mất dấu (frames_lost >= 1):
+        # - Ngay khi xe đã vào ROI (`ever_in_roi`) mà đi ra khỏi vùng ROI hoặc mất dấu:
         #   nếu đã có biển số mà chưa gửi event -> Chốt ngay lập tức (force_last_chance=True)!
-        # - Xóa ngay các track đã đi qua khỏi ROI (`exited_roi`) hoặc mất dấu >= 2 frames để giải phóng ID (#1, #2) cho xe tiếp theo!
+        # - Không xóa ngay lập tức ở frame 0 khi xe vừa chớm ra ngoài ROI (tránh xóa nhầm trước khi OCR trả về).
         max_lost_unconfirmed = 3
-        max_lost_confirmed = 4
+        max_lost_confirmed = 5
         with self._state_lock:
             for tid, trk in list(self.tracked_plates.items()):
                 was_in_roi = getattr(trk, "ever_in_roi", False)
                 outside_roi_now = has_roi and not self.is_track_in_roi(trk, roi_pts)
                 exited_roi = was_in_roi and outside_roi_now
-                if (trk.frames_lost >= 2 or exited_roi) and not trk.event_sent and trk.plate_text:
+                if (trk.frames_lost >= 1 or exited_roi) and not trk.event_sent and trk.plate_text:
                     self._try_finalize_track_event(
                         trk, frame_bgr, now, events_triggered, force_last_chance=True
                     )
 
-            dead_tracks = [
-                tid for tid, trk in self.tracked_plates.items()
-                if (
-                    (getattr(trk, "ever_in_roi", False) and has_roi and not self.is_track_in_roi(trk, roi_pts))
-                    or (not trk.plate_text and trk.frames_lost >= max_lost_unconfirmed)
-                    or (trk.frames_lost >= max_lost_confirmed)
-                )
-            ]
+            dead_tracks = []
+            for tid, trk in list(self.tracked_plates.items()):
+                was_in_roi = getattr(trk, "ever_in_roi", False)
+                outside_roi_now = has_roi and not self.is_track_in_roi(trk, roi_pts)
+                exited_roi = was_in_roi and outside_roi_now
+
+                # Bảo vệ an toàn cho track đang đợi OCR worker async (tối đa 8 frames)
+                if getattr(trk, "ocr_pending", False) and trk.frames_lost < 8:
+                    continue
+
+                # 1. Xe đã gửi event thành công và đã ra khỏi ROI: dọn dẹp sau 3 frame để giải phóng slot cho xe sau
+                if trk.event_sent and exited_roi and trk.frames_lost >= 3:
+                    dead_tracks.append(tid)
+                    continue
+
+                # 2. Xe chưa đọc được biển và mất dấu quá lâu (>= max_lost_unconfirmed)
+                if not trk.plate_text and trk.frames_lost >= max_lost_unconfirmed:
+                    dead_tracks.append(tid)
+                    continue
+
+                # 3. Xe đã mất dấu quá lâu (>= max_lost_confirmed)
+                if trk.frames_lost >= max_lost_confirmed:
+                    dead_tracks.append(tid)
+                    continue
             for tid in dead_tracks:
                 if self.bt and self.tracker_mode == "bytetrack":
                     self.bt.drop(tid)

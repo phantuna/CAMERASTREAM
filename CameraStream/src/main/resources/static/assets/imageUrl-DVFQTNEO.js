@@ -1,0 +1,1 @@
+import{a as e,i as t}from"./index-BNCTVfRA.js";var n=t();e();function r(e,t){if(!e)return``;let r=e.trim();return r?r.startsWith(`data:`)||/^https?:\/\//i.test(r)?r:`${(t||n).replace(/\/+$/,``)}/${r.replace(/^\/+/,``)}`:``}export{r as n,n as t};
