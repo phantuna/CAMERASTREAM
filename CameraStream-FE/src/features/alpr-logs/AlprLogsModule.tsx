@@ -22,7 +22,7 @@ import type { ExportProgressCallback } from '../../shared/components/ExportExcel
 import AlprCardItem from './components/AlprCardItem';
 import AlprTable from './components/AlprTable';
 import { useEventStream } from '../../core/websocket/useEventStream';
-import { resolveImageUrl, AI_SERVICE_BASE_URL } from '../../shared/utils/imageUrl';
+import { resolveImageUrl } from '../../shared/utils/imageUrl';
 import { useAuth } from '../../core/auth/AuthContext';
 
 export interface AlprLogsModuleProps {
@@ -158,37 +158,17 @@ export const AlprLogsModule: FC<AlprLogsModuleProps> = ({ apiBaseUrl }) => {
         return;
       }
 
-      // 2. Fallback: AI service Python (khi backend chưa có dữ liệu)
-      const pyRes = await fetch(`${AI_SERVICE_BASE_URL}/api/detections`, {
-        signal: controller.signal,
-        headers: { 'Accept': 'application/json' }
-      });
-      if (pyRes.ok) {
-        const json = await pyRes.json();
-        if (json && Array.isArray(json.data)) {
-          const newItems: RealDetectionEvent[] = json.data.slice(0, 200).map((item: any) => ({
-            ...item,
-            snapshotUrl: resolveImageUrl(item.snapshotUrl),
-            plateCropUrl: resolveImageUrl(item.plateCropUrl)
-          }));
-          setServerTotalElements(newItems.length);
-          setServerTotalPages(Math.max(1, Math.ceil(newItems.length / pageSize)));
-          setDetections((prev) => {
-            if (
-              prev.length === newItems.length &&
-              prev[0]?.id === newItems[0]?.id &&
-              prev[0]?.detectedAt === newItems[0]?.detectedAt
-            ) {
-              return prev;
-            }
-            return newItems;
-          });
-        }
-      }
+      // Backend trả về lỗi hoặc chưa sẵn sàng -> reset dữ liệu rỗng từ CSDL
+      setDetections([]);
+      setServerTotalElements(0);
+      setServerTotalPages(1);
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
-        console.warn('Lỗi tải dữ liệu ALPR:', err);
+        console.warn('Lỗi tải dữ liệu ALPR từ CSDL:', err);
       }
+      setDetections([]);
+      setServerTotalElements(0);
+      setServerTotalPages(1);
     } finally {
       // Chỉ request mới nhất mới được tắt skeleton (request bị abort không ghi đè trạng thái)
       if (abortControllerRef.current === controller) {

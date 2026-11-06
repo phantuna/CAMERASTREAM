@@ -119,15 +119,24 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
     window.open(url, '_blank');
   };
 
+  const formatVehicleType = (vt: string) => {
+    switch (vt) {
+      case 'CAR': return 'Ô tô';
+      case 'BIKE': return 'Xe máy';
+      case 'TRUCK': return 'Xe tải';
+      default: return 'Khác';
+    }
+  };
+
   return (
-    <div style={{ padding: '20px', color: '#f8fafc', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '20px', backgroundColor: '#F8FAFC', color: '#0F172A', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#f8fafc' }}>
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0F172A' }}>
             Danh Bạ Phương Tiện (Vehicles Master)
           </h2>
-          <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#94a3b8' }}>
+          <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748B' }}>
             Quản lý biển số xe đăng ký nội bộ, cán bộ nhân viên, nhà thầu & phân loại ô tô/xe máy
           </p>
         </div>
@@ -139,13 +148,14 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
               alignItems: 'center',
               gap: '6px',
               padding: '8px 14px',
-              backgroundColor: '#0284c7',
+              backgroundColor: '#0284C7',
               border: 'none',
               borderRadius: '6px',
-              color: '#ffffff',
+              color: '#FFFFFF',
               cursor: 'pointer',
               fontSize: '13px',
-              fontWeight: 600
+              fontWeight: 600,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
             <IconPlus size={16} /> Thêm Phương Tiện Mới
@@ -157,13 +167,14 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
               alignItems: 'center',
               gap: '6px',
               padding: '8px 14px',
-              backgroundColor: '#065f46',
-              border: '1px solid #059669',
+              backgroundColor: '#059669',
+              border: '1px solid #047857',
               borderRadius: '6px',
-              color: '#f8fafc',
+              color: '#FFFFFF',
               cursor: 'pointer',
               fontSize: '13px',
-              fontWeight: 600
+              fontWeight: 600,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
             <IconFileSpreadsheet size={16} /> Xuất Excel
@@ -175,12 +186,13 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
               alignItems: 'center',
               gap: '6px',
               padding: '8px 12px',
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #CBD5E1',
               borderRadius: '6px',
-              color: '#cbd5e1',
+              color: '#334155',
               cursor: 'pointer',
-              fontSize: '13px'
+              fontSize: '13px',
+              fontWeight: 500
             }}
           >
             <IconRefresh size={16} /> Làm mới
@@ -191,14 +203,15 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
       {/* Filter Toolbar */}
       <div
         style={{
-          backgroundColor: '#0f172a',
-          border: '1px solid #1e293b',
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
           borderRadius: '8px',
           padding: '14px',
           marginBottom: '16px',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '10px'
+          gap: '10px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
         }}
       >
         <div>
@@ -212,7 +225,7 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
               onKeyDown={(e) => { if (e.key === 'Enter') { setCurrentPage(1); loadVehicles(); } }}
               style={filterInputStyle}
             />
-            <IconSearch size={14} style={{ position: 'absolute', right: '10px', top: '10px', color: '#64748b' }} />
+            <IconSearch size={14} style={{ position: 'absolute', right: '10px', top: '10px', color: '#94A3B8' }} />
           </div>
         </div>
 
@@ -224,10 +237,10 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
             style={filterInputStyle}
           >
             <option value="">-- Tất cả loại xe --</option>
-            <option value="CAR">🚗 Ô tô</option>
-            <option value="BIKE">🏍️ Xe máy</option>
-            <option value="TRUCK">🚚 Xe tải</option>
-            <option value="OTHER">🚙 Khác</option>
+            <option value="CAR">Ô tô</option>
+            <option value="BIKE">Xe máy</option>
+            <option value="TRUCK">Xe tải</option>
+            <option value="OTHER">Khác</option>
           </select>
         </div>
 
@@ -281,33 +294,34 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
       <div
         style={{
           flex: 1,
-          backgroundColor: '#0f172a',
-          border: '1px solid #1e293b',
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
           borderRadius: '8px',
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
         }}
       >
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
             <TableSkeleton rows={8} />
           ) : error ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>
+            <div style={{ padding: '40px', textAlign: 'center', color: '#EF4444' }}>
               <p>Có lỗi xảy ra: {error}</p>
               <button
                 onClick={loadVehicles}
-                style={{ padding: '8px 16px', backgroundColor: '#334155', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                style={{ padding: '8px 16px', backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1', borderRadius: 6, cursor: 'pointer' }}
               >
                 Thử lại
               </button>
             </div>
           ) : vehicles.length === 0 ? (
-            <EmptyState message="Không tìm thấy phương tiện nào trong danh bạ." />
+            <EmptyState title="Không tìm thấy phương tiện nào" description="Thử thay đổi từ khóa tìm kiếm hoặc lọc theo điều kiện khác." />
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#1e293b', borderBottom: '1px solid #334155', color: '#94a3b8' }}>
+                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569' }}>
                   <th style={thStyle}>Biển Số</th>
                   <th style={thStyle}>Loại Xe</th>
                   <th style={thStyle}>Hiệu Xe / Màu</th>
@@ -318,103 +332,123 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {vehicles.map((v) => (
-                  <tr
-                    key={v.id}
-                    style={{ borderBottom: '1px solid #1e293b', transition: 'background-color 0.15s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1e293b66'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                  >
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          fontFamily: 'monospace',
-                          fontWeight: 700,
-                          color: '#38bdf8',
-                          backgroundColor: '#0284c715',
+                {vehicles.map((v, idx) => {
+                  const rowBg = idx % 2 === 0 ? '#FFFFFF' : '#FAFBFC';
+                  return (
+                    <tr
+                      key={v.id}
+                      style={{
+                        backgroundColor: rowBg,
+                        borderBottom: '1px solid #F1F5F9',
+                        transition: 'background-color 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F1F5F9'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = rowBg; }}
+                    >
+                      <td style={tdStyle}>
+                        <span
+                          style={{
+                            fontFamily: 'monospace',
+                            fontWeight: 700,
+                            color: '#1D4ED8',
+                            backgroundColor: '#EFF6FF',
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            border: '1px solid #BFDBFE'
+                          }}
+                        >
+                          {v.plateNumber}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <span style={{
                           padding: '3px 8px',
-                          borderRadius: '4px',
-                          border: '1px solid #0284c744'
-                        }}
-                      >
-                        {v.plateNumber}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      {v.vehicleType === 'CAR' ? '🚗 Ô tô' : v.vehicleType === 'BIKE' ? '🏍️ Xe máy' : v.vehicleType === 'TRUCK' ? '🚚 Xe tải' : '🚙 Khác'}
-                    </td>
-                    <td style={tdStyle}>
-                      <div>{v.brand || '---'} {v.model ? `(${v.model})` : ''}</div>
-                      {v.color && <div style={{ fontSize: '11px', color: '#94a3b8' }}>Màu: {v.color}</div>}
-                    </td>
-                    <td style={tdStyle}>
-                      <div style={{ color: '#f8fafc', fontWeight: 500 }}>{v.ownerName || 'Chưa cập nhật'}</div>
-                      {v.ownerPhone && <div style={{ fontSize: '11px', color: '#38bdf8' }}>{v.ownerPhone}</div>}
-                    </td>
-                    <td style={tdStyle}>
-                      <div>{v.companyName || 'Khách vãng lai'}</div>
-                      {v.departmentName && <div style={{ fontSize: '11px', color: '#94a3b8' }}>{v.departmentName}</div>}
-                    </td>
-                    <td style={tdStyle}>
-                      {v.active ? (
-                        <span style={{ background: '#059669', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>Hoạt động</span>
-                      ) : (
-                        <span style={{ background: '#64748b', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 11 }}>Vô hiệu</span>
-                      )}
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                        <button
-                          onClick={() => { setEditingVehicle(v); setIsModalOpen(true); }}
-                          style={{
-                            padding: '4px 10px',
-                            backgroundColor: '#334155',
-                            color: '#38bdf8',
-                            border: '1px solid #475569',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px'
-                          }}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => v.id && handleDeleteVehicle(v.id, v.plateNumber)}
-                          style={{
-                            padding: '4px 10px',
-                            backgroundColor: '#450a0a',
-                            color: '#f87171',
-                            border: '1px solid #7f1d1d',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px'
-                          }}
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          borderRadius: 4,
+                          fontSize: 12,
+                          fontWeight: 500,
+                          backgroundColor: '#F1F5F9',
+                          color: '#334155',
+                          border: '1px solid #E2E8F0'
+                        }}>
+                          {formatVehicleType(v.vehicleType)}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <div style={{ color: '#0F172A', fontWeight: 500 }}>{v.brand || '---'} {v.model ? `(${v.model})` : ''}</div>
+                        {v.color && <div style={{ fontSize: '11px', color: '#64748B' }}>Màu: {v.color}</div>}
+                      </td>
+                      <td style={tdStyle}>
+                        <div style={{ color: '#0F172A', fontWeight: 500 }}>{v.ownerName || 'Chưa cập nhật'}</div>
+                        {v.ownerPhone && <div style={{ fontSize: '11px', color: '#0284C7', fontWeight: 500 }}>{v.ownerPhone}</div>}
+                      </td>
+                      <td style={tdStyle}>
+                        <div style={{ color: '#0F172A' }}>{v.companyName || 'Khách vãng lai'}</div>
+                        {v.departmentName && <div style={{ fontSize: '11px', color: '#64748B' }}>{v.departmentName}</div>}
+                      </td>
+                      <td style={tdStyle}>
+                        {v.active ? (
+                          <span style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>Hoạt động</span>
+                        ) : (
+                          <span style={{ background: '#F1F5F9', color: '#64748B', border: '1px solid #CBD5E1', padding: '2px 8px', borderRadius: 4, fontSize: 11 }}>Vô hiệu</span>
+                        )}
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => { setEditingVehicle(v); setIsModalOpen(true); }}
+                            style={{
+                              padding: '4px 10px',
+                              backgroundColor: '#EFF6FF',
+                              color: '#0284C7',
+                              border: '1px solid #BFDBFE',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 500
+                            }}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => v.id && handleDeleteVehicle(v.id, v.plateNumber)}
+                            style={{
+                              padding: '4px 10px',
+                              backgroundColor: '#FEF2F2',
+                              color: '#DC2626',
+                              border: '1px solid #FECACA',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 500
+                            }}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
         </div>
 
         {/* Footer pagination */}
-        <div style={{ borderTop: '1px solid #1e293b', padding: '10px 16px' }}>
+        <div style={{ borderTop: '1px solid #E2E8F0', padding: '10px 16px', backgroundColor: '#FFFFFF' }}>
           <PaginationBar
             currentPage={currentPage}
             totalPages={totalPages}
-            totalElements={totalElements}
+            totalItems={totalElements}
             pageSize={pageSize}
+            itemLabel="phương tiện"
             onPageChange={setCurrentPage}
             onPageSizeChange={(newSize) => { setPageSize(newSize); setCurrentPage(1); }}
           />
         </div>
       </div>
 
-      {/* Vehicle Modal with Suspense */}
+      {/* Modal with Suspense */}
       <Suspense fallback={null}>
         {isModalOpen && (
           <VehicleModal
@@ -430,18 +464,17 @@ export const VehiclesPage: FC<VehiclesPageProps> = ({
   );
 };
 
-const thStyle: React.CSSProperties = { padding: '12px 14px', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' };
+const thStyle: React.CSSProperties = { padding: '12px 14px', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' };
 const tdStyle: React.CSSProperties = { padding: '10px 14px', verticalAlign: 'middle' };
-const filterLabelStyle: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px' };
+const filterLabelStyle: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' };
 const filterInputStyle: React.CSSProperties = {
   width: '100%',
   padding: '7px 10px',
-  backgroundColor: '#1e293b',
-  border: '1px solid #334155',
+  backgroundColor: '#FFFFFF',
+  border: '1px solid #CBD5E1',
   borderRadius: '6px',
-  color: '#f8fafc',
+  color: '#0F172A',
   fontSize: '13px'
 };
 
 export default VehiclesPage;
-

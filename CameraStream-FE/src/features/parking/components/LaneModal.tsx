@@ -77,7 +77,7 @@ export const LaneModal: FC<LaneModalProps> = ({ lane, isOpen, onClose, onSave })
           <h3 style={titleStyle}>{lane ? 'Cập Nhật Làn Kiểm Soát' : 'Thêm Mới Làn Xe'}</h3>
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
-        <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
+        <form onSubmit={handleSubmit} style={{ padding: '20px', backgroundColor: '#FFFFFF' }}>
           {err && <div style={errStyle}>{err}</div>}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', marginBottom: '12px' }}>
             <div>
@@ -148,8 +148,8 @@ export const LaneModal: FC<LaneModalProps> = ({ lane, isOpen, onClose, onSave })
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <input type="checkbox" id="lane-act" checked={active} onChange={(e) => setActive(e.target.checked)} />
-            <label htmlFor="lane-act" style={{ color: '#cbd5e1', fontSize: '13px' }}>Kích hoạt hoạt động</label>
+            <input type="checkbox" id="lane-act" checked={active} onChange={(e) => setActive(e.target.checked)} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+            <label htmlFor="lane-act" style={{ color: '#334155', fontSize: '13px', cursor: 'pointer' }}>Kích hoạt hoạt động</label>
           </div>
 
           <div style={footerStyle}>
@@ -167,7 +167,7 @@ export const LaneModal: FC<LaneModalProps> = ({ lane, isOpen, onClose, onSave })
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
-  backgroundColor: 'rgba(0,0,0,0.75)',
+  backgroundColor: 'rgba(15, 23, 42, 0.6)',
   zIndex: 9999,
   display: 'flex',
   alignItems: 'center',
@@ -176,45 +176,45 @@ const overlayStyle: React.CSSProperties = {
   backdropFilter: 'blur(3px)'
 };
 const modalBoxStyle: React.CSSProperties = {
-  backgroundColor: '#0f172a',
-  border: '1px solid #334155',
+  backgroundColor: '#FFFFFF',
+  border: '1px solid #E2E8F0',
   borderRadius: '12px',
   width: '100%',
   maxWidth: '520px',
   overflow: 'hidden',
-  boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)'
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
 };
 const headerStyle: React.CSSProperties = {
   padding: '14px 20px',
-  background: '#1e293b',
-  borderBottom: '1px solid #334155',
+  background: '#F8FAFC',
+  borderBottom: '1px solid #E2E8F0',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between'
 };
-const titleStyle: React.CSSProperties = { margin: 0, fontSize: '16px', fontWeight: 600, color: '#f8fafc' };
-const closeBtnStyle: React.CSSProperties = { background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '18px', cursor: 'pointer' };
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '5px' };
+const titleStyle: React.CSSProperties = { margin: 0, fontSize: '16px', fontWeight: 600, color: '#0F172A' };
+const closeBtnStyle: React.CSSProperties = { background: 'transparent', border: 'none', color: '#64748B', fontSize: '18px', cursor: 'pointer' };
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 500, color: '#334155', marginBottom: '5px' };
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '8px 12px',
-  backgroundColor: '#1e293b',
-  border: '1px solid #334155',
+  backgroundColor: '#FFFFFF',
+  border: '1px solid #CBD5E1',
   borderRadius: '6px',
-  color: '#f8fafc',
+  color: '#0F172A',
   fontSize: '13px'
 };
 const errStyle: React.CSSProperties = {
-  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-  border: '1px solid #ef4444',
-  color: '#fca5a5',
+  backgroundColor: '#FEF2F2',
+  border: '1px solid #FECACA',
+  color: '#DC2626',
   padding: '8px 12px',
   borderRadius: '6px',
   marginBottom: '12px',
   fontSize: '12px'
 };
 const footerStyle: React.CSSProperties = {
-  borderTop: '1px solid #1e293b',
+  borderTop: '1px solid #E2E8F0',
   paddingTop: '14px',
   display: 'flex',
   justifyContent: 'flex-end',
@@ -222,17 +222,18 @@ const footerStyle: React.CSSProperties = {
 };
 const cancelBtnStyle: React.CSSProperties = {
   padding: '7px 16px',
-  backgroundColor: '#334155',
-  color: '#f8fafc',
-  border: 'none',
+  backgroundColor: '#FFFFFF',
+  color: '#334155',
+  border: '1px solid #CBD5E1',
   borderRadius: '6px',
   cursor: 'pointer',
-  fontSize: '13px'
+  fontSize: '13px',
+  fontWeight: 500
 };
 const submitBtnStyle: React.CSSProperties = {
   padding: '7px 20px',
-  backgroundColor: '#0284c7',
-  color: '#ffffff',
+  backgroundColor: '#0284C7',
+  color: '#FFFFFF',
   border: 'none',
   borderRadius: '6px',
   cursor: 'pointer',
@@ -240,4 +241,3 @@ const submitBtnStyle: React.CSSProperties = {
   fontWeight: 600
 };
 export default LaneModal;
-

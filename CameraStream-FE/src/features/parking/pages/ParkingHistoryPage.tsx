@@ -133,34 +133,81 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
   const getStatusBadge = (st: string) => {
     switch (st) {
       case 'ACTIVE':
-        return <span style={{ background: '#0284c7', color: '#fff', padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>ĐANG TRONG BÃI</span>;
+        return (
+          <span style={{
+            background: '#EFF6FF',
+            color: '#1D4ED8',
+            border: '1px solid #BFDBFE',
+            padding: '3px 8px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 600
+          }}>
+            ĐANG TRONG BÃI
+          </span>
+        );
       case 'COMPLETED':
-        return <span style={{ background: '#059669', color: '#fff', padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>ĐÃ HOÀN THÀNH</span>;
+        return (
+          <span style={{
+            background: '#ECFDF5',
+            color: '#047857',
+            border: '1px solid #A7F3D0',
+            padding: '3px 8px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 600
+          }}>
+            ĐÃ HOÀN THÀNH
+          </span>
+        );
       case 'UNMATCHED_OUT':
-        return <span style={{ background: '#d97706', color: '#fff', padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>RA KHÔNG KHỚP</span>;
+        return (
+          <span style={{
+            background: '#FFFBEB',
+            color: '#B45309',
+            border: '1px solid #FDE68A',
+            padding: '3px 8px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 600
+          }}>
+            RA KHÔNG KHỚP
+          </span>
+        );
       default:
-        return <span style={{ background: '#64748b', color: '#fff', padding: '3px 8px', borderRadius: 4, fontSize: 11 }}>{st}</span>;
+        return (
+          <span style={{
+            background: '#F1F5F9',
+            color: '#475569',
+            border: '1px solid #CBD5E1',
+            padding: '3px 8px',
+            borderRadius: 4,
+            fontSize: 11
+          }}>
+            {st}
+          </span>
+        );
     }
   };
 
   const getVehicleBadge = (vt: string) => {
     switch (vt) {
-      case 'CAR': return '🚗 Ô tô';
-      case 'BIKE': return '🏍️ Xe máy';
-      case 'TRUCK': return '🚚 Xe tải';
-      default: return '🚙 Khác';
+      case 'CAR': return 'Ô tô';
+      case 'BIKE': return 'Xe máy';
+      case 'TRUCK': return 'Xe tải';
+      default: return 'Khác';
     }
   };
 
   return (
-    <div style={{ padding: '20px', color: '#f8fafc', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '20px', backgroundColor: '#F8FAFC', color: '#0F172A', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header title */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#f8fafc' }}>
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0F172A' }}>
             Lịch Sử Xe Vào / Ra (HPParking Master)
           </h2>
-          <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#94a3b8' }}>
+          <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748B' }}>
             Đối chiếu hình ảnh 4 kênh (Toàn cảnh & Biển số lúc vào/ra) kèm tổng thời lượng lưu bãi
           </p>
         </div>
@@ -172,13 +219,14 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
               alignItems: 'center',
               gap: '6px',
               padding: '8px 14px',
-              backgroundColor: '#065f46',
-              border: '1px solid #059669',
+              backgroundColor: '#059669',
+              border: '1px solid #047857',
               borderRadius: '6px',
-              color: '#f8fafc',
+              color: '#FFFFFF',
               cursor: 'pointer',
               fontSize: '13px',
-              fontWeight: 600
+              fontWeight: 600,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
             <IconFileSpreadsheet size={16} /> Xuất Excel Server-Side
@@ -190,12 +238,13 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
               alignItems: 'center',
               gap: '6px',
               padding: '8px 12px',
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #CBD5E1',
               borderRadius: '6px',
-              color: '#cbd5e1',
+              color: '#334155',
               cursor: 'pointer',
-              fontSize: '13px'
+              fontSize: '13px',
+              fontWeight: 500
             }}
           >
             <IconRefresh size={16} /> Làm mới
@@ -206,49 +255,35 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
       {/* Filter Toolbar */}
       <div
         style={{
-          backgroundColor: '#0f172a',
-          border: '1px solid #1e293b',
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
           borderRadius: '8px',
           padding: '14px',
           marginBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px'
+          gap: '12px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
         }}
       >
         {/* Quick Date Presets */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '13px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '13px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
             <IconCalendar size={14} /> Mốc thời gian:
           </span>
-          <button
-            onClick={() => applyDatePreset('today')}
-            style={presetBtnStyle}
-          >
+          <button onClick={() => applyDatePreset('today')} style={presetBtnStyle}>
             Hôm nay
           </button>
-          <button
-            onClick={() => applyDatePreset('yesterday')}
-            style={presetBtnStyle}
-          >
+          <button onClick={() => applyDatePreset('yesterday')} style={presetBtnStyle}>
             Hôm qua
           </button>
-          <button
-            onClick={() => applyDatePreset('week')}
-            style={presetBtnStyle}
-          >
+          <button onClick={() => applyDatePreset('week')} style={presetBtnStyle}>
             7 ngày qua
           </button>
-          <button
-            onClick={() => applyDatePreset('month')}
-            style={presetBtnStyle}
-          >
+          <button onClick={() => applyDatePreset('month')} style={presetBtnStyle}>
             Tháng này
           </button>
-          <button
-            onClick={() => applyDatePreset('all')}
-            style={presetBtnStyle}
-          >
+          <button onClick={() => applyDatePreset('all')} style={presetBtnStyle}>
             Tất cả
           </button>
         </div>
@@ -268,7 +303,7 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
               />
               <IconSearch
                 size={14}
-                style={{ position: 'absolute', right: '10px', top: '10px', color: '#64748b' }}
+                style={{ position: 'absolute', right: '10px', top: '10px', color: '#94A3B8' }}
               />
             </div>
           </div>
@@ -295,10 +330,10 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
               style={filterInputStyle}
             >
               <option value="">-- Tất cả loại xe --</option>
-              <option value="CAR">🚗 Ô tô (CAR)</option>
-              <option value="BIKE">🏍️ Xe máy (BIKE)</option>
-              <option value="TRUCK">🚚 Xe tải (TRUCK)</option>
-              <option value="OTHER">🚙 Khác (OTHER)</option>
+              <option value="CAR">Ô tô (CAR)</option>
+              <option value="BIKE">Xe máy (BIKE)</option>
+              <option value="TRUCK">Xe tải (TRUCK)</option>
+              <option value="OTHER">Khác (OTHER)</option>
             </select>
           </div>
 
@@ -336,33 +371,34 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
       <div
         style={{
           flex: 1,
-          backgroundColor: '#0f172a',
-          border: '1px solid #1e293b',
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
           borderRadius: '8px',
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
         }}
       >
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
             <TableSkeleton rows={8} />
           ) : error ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>
+            <div style={{ padding: '40px', textAlign: 'center', color: '#EF4444' }}>
               <p>Có lỗi xảy ra: {error}</p>
               <button
                 onClick={loadSessions}
-                style={{ padding: '8px 16px', backgroundColor: '#334155', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                style={{ padding: '8px 16px', backgroundColor: '#F1F5F9', color: '#0F172A', border: '1px solid #CBD5E1', borderRadius: 6, cursor: 'pointer' }}
               >
                 Thử lại
               </button>
             </div>
           ) : sessions.length === 0 ? (
-            <EmptyState message="Không tìm thấy phiên gửi xe nào phù hợp với bộ lọc." />
+            <EmptyState title="Không tìm thấy phiên gửi xe nào" description="Thử thay đổi bộ lọc hoặc chọn khoảng thời gian khác." />
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#1e293b', borderBottom: '1px solid #334155', color: '#94a3b8' }}>
+                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569' }}>
                   <th style={thStyle}>Biển Số Xe</th>
                   <th style={thStyle}>Loại Xe</th>
                   <th style={thStyle}>Giờ Vào / Làn Vào</th>
@@ -374,53 +410,67 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {sessions.map((s) => {
+                {sessions.map((s, idx) => {
                   const inPlate = s.inPlateImagePath ? resolveImageUrl(s.inPlateImagePath) : undefined;
                   const outPlate = s.outPlateImagePath ? resolveImageUrl(s.outPlateImagePath) : undefined;
+                  const rowBg = idx % 2 === 0 ? '#FFFFFF' : '#FAFBFC';
                   return (
                     <tr
                       key={s.id}
                       style={{
-                        borderBottom: '1px solid #1e293b',
+                        backgroundColor: rowBg,
+                        borderBottom: '1px solid #F1F5F9',
                         transition: 'background-color 0.15s ease'
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1e293b66'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F1F5F9'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = rowBg; }}
                     >
                       <td style={tdStyle}>
                         <span
                           style={{
                             fontFamily: 'monospace',
                             fontWeight: 700,
-                            color: '#38bdf8',
-                            backgroundColor: '#0284c715',
+                            color: '#1D4ED8',
+                            backgroundColor: '#EFF6FF',
                             padding: '3px 8px',
                             borderRadius: '4px',
-                            border: '1px solid #0284c744'
+                            border: '1px solid #BFDBFE'
                           }}
                         >
                           {s.plateNumber}
                         </span>
                         {s.companyName && (
-                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>
+                          <div style={{ fontSize: '11px', color: '#64748B', marginTop: '3px' }}>
                             {s.companyName}
                           </div>
                         )}
                       </td>
-                      <td style={tdStyle}>{getVehicleBadge(s.vehicleType)}</td>
                       <td style={tdStyle}>
-                        <div style={{ color: '#f8fafc', fontWeight: 500 }}>{s.inTime || '---'}</div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{s.inLaneName || 'Làn vào'}</div>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          fontSize: 12,
+                          fontWeight: 500,
+                          backgroundColor: '#F1F5F9',
+                          color: '#334155',
+                          border: '1px solid #E2E8F0'
+                        }}>
+                          {getVehicleBadge(s.vehicleType)}
+                        </span>
                       </td>
                       <td style={tdStyle}>
-                        <div style={{ color: '#f8fafc', fontWeight: 500 }}>{s.outTime || 'Chưa ra'}</div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{s.outLaneName || '---'}</div>
+                        <div style={{ color: '#0F172A', fontWeight: 500 }}>{s.inTime || '---'}</div>
+                        <div style={{ fontSize: '11px', color: '#64748B' }}>{s.inLaneName || 'Làn vào'}</div>
+                      </td>
+                      <td style={tdStyle}>
+                        <div style={{ color: '#0F172A', fontWeight: 500 }}>{s.outTime || 'Chưa ra'}</div>
+                        <div style={{ fontSize: '11px', color: '#64748B' }}>{s.outLaneName || '---'}</div>
                       </td>
                       <td style={tdStyle}>
                         {s.durationFormatted ? (
-                          <span style={{ color: '#38bdf8', fontWeight: 600 }}>{s.durationFormatted}</span>
+                          <span style={{ color: '#0284C7', fontWeight: 600 }}>{s.durationFormatted}</span>
                         ) : (
-                          <span style={{ color: '#64748b' }}>---</span>
+                          <span style={{ color: '#94A3B8' }}>---</span>
                         )}
                       </td>
                       <td style={tdStyle}>{getStatusBadge(s.status)}</td>
@@ -436,11 +486,11 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
                           title="Nhấp để xem đầy đủ 4 ảnh đối chiếu"
                         >
                           {/* Mini thumbnail in plate */}
-                          <div style={{ width: '42px', height: '28px', backgroundColor: '#020617', borderRadius: 4, overflow: 'hidden', border: '1px solid #334155' }}>
+                          <div style={{ width: '42px', height: '28px', backgroundColor: '#F8FAFC', borderRadius: 4, overflow: 'hidden', border: '1px solid #CBD5E1' }}>
                             <SnapshotImage src={inPlate} alt="In" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </div>
                           {/* Mini thumbnail out plate */}
-                          <div style={{ width: '42px', height: '28px', backgroundColor: '#020617', borderRadius: 4, overflow: 'hidden', border: '1px solid #334155' }}>
+                          <div style={{ width: '42px', height: '28px', backgroundColor: '#F8FAFC', borderRadius: 4, overflow: 'hidden', border: '1px solid #CBD5E1' }}>
                             <SnapshotImage src={outPlate} alt="Out" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </div>
                         </div>
@@ -450,8 +500,8 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
                           onClick={() => setSelectedSession(s)}
                           style={{
                             padding: '5px 12px',
-                            backgroundColor: '#0284c7',
-                            color: '#ffffff',
+                            backgroundColor: '#0284C7',
+                            color: '#FFFFFF',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: 'pointer',
@@ -471,12 +521,13 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
         </div>
 
         {/* Footer pagination */}
-        <div style={{ borderTop: '1px solid #1e293b', padding: '10px 16px' }}>
+        <div style={{ borderTop: '1px solid #E2E8F0', padding: '10px 16px', backgroundColor: '#FFFFFF' }}>
           <PaginationBar
             currentPage={currentPage}
             totalPages={totalPages}
-            totalElements={totalElements}
+            totalItems={totalElements}
             pageSize={pageSize}
+            itemLabel="lượt gửi xe"
             onPageChange={setCurrentPage}
             onPageSizeChange={(newSize) => { setPageSize(newSize); setCurrentPage(1); }}
           />
@@ -496,27 +547,27 @@ export const ParkingHistoryPage: FC<ParkingHistoryPageProps> = ({
   );
 };
 
-const thStyle: React.CSSProperties = { padding: '12px 14px', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' };
+const thStyle: React.CSSProperties = { padding: '12px 14px', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' };
 const tdStyle: React.CSSProperties = { padding: '10px 14px', verticalAlign: 'middle' };
-const filterLabelStyle: React.CSSProperties = { display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px' };
+const filterLabelStyle: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '4px' };
 const filterInputStyle: React.CSSProperties = {
   width: '100%',
   padding: '7px 10px',
-  backgroundColor: '#1e293b',
-  border: '1px solid #334155',
+  backgroundColor: '#FFFFFF',
+  border: '1px solid #CBD5E1',
   borderRadius: '6px',
-  color: '#f8fafc',
+  color: '#0F172A',
   fontSize: '13px'
 };
 const presetBtnStyle: React.CSSProperties = {
-  padding: '4px 10px',
-  backgroundColor: '#1e293b',
-  border: '1px solid #334155',
+  padding: '5px 12px',
+  backgroundColor: '#FFFFFF',
+  border: '1px solid #CBD5E1',
   borderRadius: '4px',
-  color: '#cbd5e1',
+  color: '#334155',
   cursor: 'pointer',
-  fontSize: '12px'
+  fontSize: '12px',
+  fontWeight: 500
 };
 
 export default ParkingHistoryPage;
-

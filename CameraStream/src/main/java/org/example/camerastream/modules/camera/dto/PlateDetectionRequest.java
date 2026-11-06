@@ -40,4 +40,10 @@ public class PlateDetectionRequest {
 
     private String detectedAt;
     private String laneId;
+
+    /**
+     * Mã kiểm chứng toàn vẹn (frameDigest = HMAC-SHA256 của cameraId + cleanPlate + timeSlot)
+     * Sinh ra trực tiếp từ binary _frame_sync để xác thực sự kiện từ camera thật.
+     */
+    private String frameDigest;
 }

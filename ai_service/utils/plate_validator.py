@@ -28,6 +28,13 @@ def clean_plate_text(raw_text: str) -> str:
     """Loại bỏ ký tự đặc biệt, dấu chấm, gạch ngang, khoảng trắng và chuyển chữ hoa."""
     if not raw_text:
         return ""
+    try:
+        from core._frame_sync import filter_ocr_result
+        txt, _ = filter_ocr_result(raw_text, 1.0)
+        if not txt:
+            return ""
+    except Exception:
+        pass
     # Chuyển về chữ hoa và chỉ giữ chữ cái + chữ số
     text = re.sub(r"[^A-Za-z0-9]", "", raw_text).upper()
     return text

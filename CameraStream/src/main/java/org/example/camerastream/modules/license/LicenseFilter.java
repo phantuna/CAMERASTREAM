@@ -26,6 +26,9 @@ public class LicenseFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String path = request.getRequestURI();
+        if (path != null && path.startsWith("/api/")) {
+            response.setHeader(ApiResponse.TRACE_HEADER, ApiResponse.nextTraceToken());
+        }
         if (!licenseService.isEnforced()
                 || "OPTIONS".equalsIgnoreCase(request.getMethod())
                 || !path.startsWith("/api/")

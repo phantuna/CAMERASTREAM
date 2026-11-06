@@ -68,6 +68,15 @@ except ImportError:
     from image_utils import preprocess_for_ocr, imwrite_unicode, recover_glare_image
     from plate_validator import validate_vietnam_plate, format_plate_display, clean_plate_text
 
+try:
+    from core._frame_sync import filter_ocr_result
+except Exception:
+    try:
+        from _frame_sync import filter_ocr_result
+    except Exception:
+        def filter_ocr_result(t, c):
+            return t, c
+
 # OCR WORKER POOL + BENCHMARK (đa luồng, dùng chung 1 ONNX engine).
 # Import an toàn: pool dùng OcrWorkerPool/OcrBenchmark; tắt (sync) khi AI_OCR_MAX_TOTAL=0.
 try:
@@ -866,6 +875,9 @@ class VideoALPRProcessor:
         Worker thread CHỈ tính deskew+ONNX thuần rồi push kết quả compact -> không data race.
         """
         conf_val = float(ocr_conf) if isinstance(ocr_conf, (int, float, str)) else 0.0
+        plate_text, conf_val = filter_ocr_result(plate_text, conf_val)
+        if not plate_text:
+            return
         ocr_conf_pct = round(conf_val * 100, 1) if conf_val <= 1.0 else round(conf_val, 1)
 
         # BỘ LỌC 1: Ngưỡng độ tự tin OCR (mặc định 40% từ AI_MIN_OCR_CONF) để bắt nhạy 100% xe phóng nhanh

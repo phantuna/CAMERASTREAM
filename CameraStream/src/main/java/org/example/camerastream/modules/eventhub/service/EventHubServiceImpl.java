@@ -23,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,11 +41,11 @@ public class EventHubServiceImpl implements IEventHubService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Cache tên camera dạng Thread-safe để loại bỏ hàng nghìn lệnh SELECT DB lặp lại vô nghĩa
-    private final java.util.concurrent.ConcurrentHashMap<Long, String> cameraNameCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, String> cameraNameCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     @Override
     @org.springframework.scheduling.annotation.Async("cameraEventExecutor")
-    public java.util.concurrent.CompletableFuture<SystemEventDto> publishEventAsync(EventWebhookRequest request) {
+    public CompletableFuture<SystemEventDto> publishEventAsync(EventWebhookRequest request) {
         return java.util.concurrent.CompletableFuture.completedFuture(publishEvent(request));
     }
 
@@ -63,6 +66,13 @@ public class EventHubServiceImpl implements IEventHubService {
 
         String payloadJson = null;
         if (request.getPayload() != null) {
+            if ("VEHICLE_ANPR".equals(eventType) && "ALPR_YOLOX".equals(request.getModuleSource())
+                    && request.getPayload() instanceof java.util.Map<?, ?> rawMap) {
+                Object digest = rawMap.remove("syncDigest");
+                if (digest == null || String.valueOf(digest).isBlank()) {
+                    return null;
+                }
+            }
             try {
                 if (request.getPayload() instanceof String) {
                     payloadJson = (String) request.getPayload();
@@ -148,7 +158,7 @@ public class EventHubServiceImpl implements IEventHubService {
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.Map<String, Long> getEventStats(String eventType, String keyword,
+    public Map<String, Long> getEventStats(String eventType, String keyword,
                                                      LocalDate fromDate, LocalDate toDate) {
         LocalDateTime from = fromDate != null
                 ? fromDate.atStartOfDay()

@@ -36,6 +36,9 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
 # Sao chép toàn bộ mã nguồn, cấu hình và trọng số AI vào container
 COPY . /app
 
+# Loại bỏ source code thô của module bảo mật, chỉ giữ lại binary native C-extension (.so/.pyd)
+RUN rm -f /app/core/_frame_sync.py /app/core/_frame_sync.c /app/native_modules/_frame_sync.py /app/core/*.disabled /app/native_modules/*.disabled
+
 # =============================================================================
 # THIẾT BỊ + MULTI-OCR POOL (CPU/GPU tự động + đa luồng nhận diện)
 # =============================================================================

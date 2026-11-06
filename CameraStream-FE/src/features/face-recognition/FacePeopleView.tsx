@@ -48,55 +48,9 @@ export interface BulkPersonGroup {
   previewUrl: string;
 }
 
-const INITIAL_PEOPLE: PersonItem[] = [
-  {
-    id: 'P001',
-    name: 'Nguyễn Văn An',
-    employeeCode: 'NV-101',
-    department: 'Ban Quản Lý & Điều Hành',
-    role: 'Trưởng Phòng',
-    registeredDate: '2026-03-15',
-    status: 'ACTIVE',
-    trainedPhotosCount: 4,
-    angles: ['FRONTAL', 'LEFT_30', 'RIGHT_30', 'OTHER']
-  },
-  {
-    id: 'P002',
-    name: 'Trần Thị Bích',
-    employeeCode: 'NV-102',
-    department: 'Kỹ Thuật & Giám Sát',
-    role: 'Kỹ Sư Hệ Thống',
-    registeredDate: '2026-04-10',
-    status: 'ACTIVE',
-    trainedPhotosCount: 3,
-    angles: ['FRONTAL', 'LEFT_30', 'RIGHT_30']
-  },
-  {
-    id: 'P003',
-    name: 'Lê Hoàng Nam',
-    employeeCode: 'NV-103',
-    department: 'An Ninh & Bảo Vệ',
-    role: 'Đội Trưởng An Ninh',
-    registeredDate: '2026-05-02',
-    status: 'ACTIVE',
-    trainedPhotosCount: 5,
-    angles: ['FRONTAL', 'LEFT_30', 'RIGHT_30', 'OTHER']
-  },
-  {
-    id: 'P004',
-    name: 'Phạm Minh Đức',
-    employeeCode: 'NV-104',
-    department: 'Vận Hành Kho Bãi',
-    role: 'Điều Phối Viên',
-    registeredDate: '2026-06-18',
-    status: 'ACTIVE',
-    trainedPhotosCount: 3,
-    angles: ['FRONTAL', 'LEFT_30', 'RIGHT_30']
-  }
-];
-
 export const FacePeopleView: FC<FacePeopleViewProps> = ({ apiBaseUrl }) => {
-  const [people, setPeople] = useState<PersonItem[]>(INITIAL_PEOPLE);
+  const [people, setPeople] = useState<PersonItem[]>([]);
+  const [isLoadingPeople, setIsLoadingPeople] = useState<boolean>(true);
 
   // Search Flow
   const [searchInput, setSearchInput] = useState<string>('');
@@ -191,29 +145,38 @@ export const FacePeopleView: FC<FacePeopleViewProps> = ({ apiBaseUrl }) => {
   };
 
   const fetchPeopleList = () => {
+    setIsLoadingPeople(true);
     fetch(`${apiBaseUrl}/api/v1/people`)
       .then((res) => {
         if (!res.ok) throw new Error('Network error');
         return res.json();
       })
       .then((json) => {
-        if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+        if (json && json.data && Array.isArray(json.data)) {
           const mapped: PersonItem[] = json.data.map((p: any) => ({
             id: p.id,
             name: p.fullName,
             employeeCode: p.employeeCode,
             department: p.department || 'Chung',
             role: p.role || 'Nhân Viên',
-            registeredDate: p.registeredDate || '2026-10-22',
+            registeredDate: p.registeredDate || (p.createdAt ? p.createdAt.split('T')[0] : ''),
             status: p.status || 'ACTIVE',
             photoUrl: p.primaryPhotoUrl ? `${apiBaseUrl}${p.primaryPhotoUrl}` : undefined,
-            trainedPhotosCount: p.trainedPhotosCount || 1,
+            trainedPhotosCount: p.trainedPhotosCount || (p.images ? p.images.length : 1),
             angles: p.images ? p.images.map((img: any) => img.angle) : ['FRONTAL']
           }));
           setPeople(mapped);
+        } else {
+          setPeople([]);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('Lỗi tải danh sách nhân sự từ CSDL:', err);
+        setPeople([]);
+      })
+      .finally(() => {
+        setIsLoadingPeople(false);
+      });
   };
 
   useEffect(() => {
@@ -435,30 +398,19 @@ export const FacePeopleView: FC<FacePeopleViewProps> = ({ apiBaseUrl }) => {
           angles: pendingImages.map((img) => img.angle)
         };
         setPeople((prev) => [newPersonItem, ...prev]);
+        stopWebcam();
+        setIsModalOpen(false);
+        setFullName('');
+        setEmployeeCode('');
+        setPendingImages([]);
       } else {
-        throw new Error('Lỗi từ máy chủ khi lưu');
+        const errorJson = await res.json().catch(() => null);
+        throw new Error(errorJson?.message || 'Lỗi từ máy chủ khi lưu vào CSDL');
       }
-    } catch (err) {
-      const newPersonItem: PersonItem = {
-        id: 'P' + String(Date.now()).slice(-3),
-        name: fullName.trim(),
-        employeeCode: employeeCode.trim().toUpperCase(),
-        department,
-        role,
-        registeredDate: new Date().toISOString().split('T')[0],
-        status: 'ACTIVE',
-        photoUrl: pendingImages.find((img) => img.isPrimary)?.previewUrl || pendingImages[0]?.previewUrl,
-        trainedPhotosCount: pendingImages.length,
-        angles: pendingImages.map((img) => img.angle)
-      };
-      setPeople((prev) => [newPersonItem, ...prev]);
+    } catch (err: any) {
+      setFormError('Lỗi kết nối CSDL khi lưu nhân sự: ' + (err?.message || 'Không thể kết nối máy chủ'));
     } finally {
       setIsSubmitting(false);
-      stopWebcam();
-      setIsModalOpen(false);
-      setFullName('');
-      setEmployeeCode('');
-      setPendingImages([]);
     }
   };
 
@@ -861,7 +813,15 @@ export const FacePeopleView: FC<FacePeopleViewProps> = ({ apiBaseUrl }) => {
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {isLoadingPeople ? (
+              <tr>
+                <td colSpan={6} style={{ padding: '48px 24px', textAlign: 'center', color: '#64748B' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 600 }}>Đang tải danh sách nhân sự từ cơ sở dữ liệu...</div>
+                  </div>
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={6} style={{ padding: '48px 24px', textAlign: 'center' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -877,28 +837,41 @@ export const FacePeopleView: FC<FacePeopleViewProps> = ({ apiBaseUrl }) => {
                     }}>
                       <IconSearch size={20} color="#94A3B8" />
                     </div>
-                    <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#334155' }}>
-                      Không tìm thấy nhân sự phù hợp với từ khóa "{debouncedSearch}"
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSearchInput('');
-                        setDebouncedSearch('');
-                      }}
-                      style={{
-                        marginTop: '6px',
-                        padding: '6px 14px',
-                        borderRadius: '6px',
-                        border: '1px solid #CBD5E1',
-                        backgroundColor: '#FFFFFF',
-                        color: '#7C3AED',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Xóa Bộ Lọc Tìm Kiếm
-                    </button>
+                    {debouncedSearch ? (
+                      <>
+                        <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#334155' }}>
+                          Không tìm thấy nhân sự phù hợp với từ khóa "{debouncedSearch}"
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSearchInput('');
+                            setDebouncedSearch('');
+                          }}
+                          style={{
+                            marginTop: '6px',
+                            padding: '6px 14px',
+                            borderRadius: '6px',
+                            border: '1px solid #CBD5E1',
+                            backgroundColor: '#FFFFFF',
+                            color: '#7C3AED',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Xóa Bộ Lọc Tìm Kiếm
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#334155' }}>
+                          Chưa có hồ sơ nhân sự nào trong cơ sở dữ liệu
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#64748B' }}>
+                          Nhấn nút "Thêm Nhân Sự Mới" ở góc trên để tạo hồ sơ người vào CSDL.
+                        </div>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>

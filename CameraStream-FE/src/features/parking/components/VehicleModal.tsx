@@ -110,7 +110,7 @@ export const VehicleModal: FC<VehicleModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backgroundColor: 'rgba(15, 23, 42, 0.6)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
@@ -122,8 +122,8 @@ export const VehicleModal: FC<VehicleModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: '#0f172a',
-          border: '1px solid #334155',
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #E2E8F0',
           borderRadius: '12px',
           width: '100%',
           maxWidth: '650px',
@@ -131,21 +131,21 @@ export const VehicleModal: FC<VehicleModalProps> = ({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
           style={{
             padding: '16px 20px',
-            borderBottom: '1px solid #1e293b',
+            borderBottom: '1px solid #E2E8F0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: '#1e293b'
+            background: '#F8FAFC'
           }}
         >
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#f8fafc' }}>
+          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 600, color: '#0F172A' }}>
             {vehicle ? 'Cập Nhật Phương Tiện' : 'Thêm Mới Phương Tiện'}
           </h3>
           <button
@@ -153,7 +153,7 @@ export const VehicleModal: FC<VehicleModalProps> = ({
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#94a3b8',
+              color: '#64748B',
               fontSize: '20px',
               cursor: 'pointer'
             }}
@@ -162,13 +162,13 @@ export const VehicleModal: FC<VehicleModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
+        <form onSubmit={handleSubmit} style={{ padding: '20px', overflowY: 'auto', flex: 1, backgroundColor: '#FFFFFF' }}>
           {errorMsg && (
             <div
               style={{
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid #ef4444',
-                color: '#fca5a5',
+                backgroundColor: '#FEF2F2',
+                border: '1px solid #FECACA',
+                color: '#DC2626',
                 padding: '10px 14px',
                 borderRadius: '6px',
                 marginBottom: '16px',
@@ -181,8 +181,8 @@ export const VehicleModal: FC<VehicleModalProps> = ({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>
-                Biển số xe <span style={{ color: '#ef4444' }}>*</span>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>
+                Biển số xe <span style={{ color: '#EF4444' }}>*</span>
               </label>
               <input
                 type="text"
@@ -192,10 +192,10 @@ export const VehicleModal: FC<VehicleModalProps> = ({
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '14px',
                   fontWeight: 600,
                   textTransform: 'uppercase'
@@ -203,8 +203,8 @@ export const VehicleModal: FC<VehicleModalProps> = ({
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>
-                Loại xe <span style={{ color: '#ef4444' }}>*</span>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>
+                Loại xe <span style={{ color: '#EF4444' }}>*</span>
               </label>
               <select
                 value={vehicleType}
@@ -212,24 +212,24 @@ export const VehicleModal: FC<VehicleModalProps> = ({
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '14px'
                 }}
               >
-                <option value="CAR">🚗 Ô tô (CAR)</option>
-                <option value="BIKE">🏍️ Xe máy (BIKE)</option>
-                <option value="TRUCK">🚚 Xe tải (TRUCK)</option>
-                <option value="OTHER">🚙 Khác (OTHER)</option>
+                <option value="CAR">Ô tô (CAR)</option>
+                <option value="BIKE">Xe máy (BIKE)</option>
+                <option value="TRUCK">Xe tải (TRUCK)</option>
+                <option value="OTHER">Khác (OTHER)</option>
               </select>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Hãng xe</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>Hãng xe</label>
               <input
                 type="text"
                 placeholder="Toyota, Honda, ..."
@@ -238,16 +238,16 @@ export const VehicleModal: FC<VehicleModalProps> = ({
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '13px'
                 }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Dòng xe (Model)</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>Dòng xe (Model)</label>
               <input
                 type="text"
                 placeholder="Camry, Vios, SH..."
@@ -256,16 +256,16 @@ export const VehicleModal: FC<VehicleModalProps> = ({
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '13px'
                 }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Màu sơn</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>Màu sơn</label>
               <input
                 type="text"
                 placeholder="Trắng, Đen, Đỏ..."
@@ -274,10 +274,10 @@ export const VehicleModal: FC<VehicleModalProps> = ({
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '13px'
                 }}
               />
@@ -286,7 +286,7 @@ export const VehicleModal: FC<VehicleModalProps> = ({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Công ty / Đơn vị</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>Công ty / Đơn vị</label>
               <select
                 value={companyId || ''}
                 onChange={(e) => {
@@ -297,10 +297,10 @@ export const VehicleModal: FC<VehicleModalProps> = ({
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '13px'
                 }}
               >
@@ -313,17 +313,17 @@ export const VehicleModal: FC<VehicleModalProps> = ({
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Phòng ban</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>Phòng ban</label>
               <select
                 value={departmentId || ''}
                 onChange={(e) => setDepartmentId(e.target.value ? Number(e.target.value) : undefined)}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '13px'
                 }}
               >
@@ -339,7 +339,7 @@ export const VehicleModal: FC<VehicleModalProps> = ({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Chủ sở hữu / Lái xe</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>Chủ sở hữu / Lái xe</label>
               <input
                 type="text"
                 placeholder="Họ và tên..."
@@ -348,16 +348,16 @@ export const VehicleModal: FC<VehicleModalProps> = ({
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '13px'
                 }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Số điện thoại</label>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>Số điện thoại</label>
               <input
                 type="text"
                 placeholder="0912..."
@@ -366,10 +366,10 @@ export const VehicleModal: FC<VehicleModalProps> = ({
                 style={{
                   width: '100%',
                   padding: '8px 12px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
                   borderRadius: '6px',
-                  color: '#f8fafc',
+                  color: '#0F172A',
                   fontSize: '13px'
                 }}
               />
@@ -377,7 +377,7 @@ export const VehicleModal: FC<VehicleModalProps> = ({
           </div>
 
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Ghi chú</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#334155', marginBottom: '6px' }}>Ghi chú</label>
             <textarea
               rows={2}
               placeholder="Ghi chú thêm về xe..."
@@ -386,10 +386,10 @@ export const VehicleModal: FC<VehicleModalProps> = ({
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #CBD5E1',
                 borderRadius: '6px',
-                color: '#f8fafc',
+                color: '#0F172A',
                 fontSize: '13px',
                 resize: 'none'
               }}
@@ -404,7 +404,7 @@ export const VehicleModal: FC<VehicleModalProps> = ({
               onChange={(e) => setActive(e.target.checked)}
               style={{ width: '16px', height: '16px', cursor: 'pointer' }}
             />
-            <label htmlFor="vehicle-active-cb" style={{ color: '#cbd5e1', fontSize: '14px', cursor: 'pointer' }}>
+            <label htmlFor="vehicle-active-cb" style={{ color: '#334155', fontSize: '13px', cursor: 'pointer' }}>
               Trạng thái kích hoạt (cho phép nhận diện và vào bãi)
             </label>
           </div>
@@ -412,7 +412,7 @@ export const VehicleModal: FC<VehicleModalProps> = ({
           <div
             style={{
               paddingTop: '16px',
-              borderTop: '1px solid #1e293b',
+              borderTop: '1px solid #E2E8F0',
               display: 'flex',
               justifyContent: 'flex-end',
               gap: '12px'
@@ -423,9 +423,9 @@ export const VehicleModal: FC<VehicleModalProps> = ({
               onClick={onClose}
               style={{
                 padding: '8px 18px',
-                backgroundColor: '#334155',
-                color: '#f8fafc',
-                border: 'none',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #CBD5E1',
+                color: '#334155',
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontWeight: 500
@@ -438,8 +438,8 @@ export const VehicleModal: FC<VehicleModalProps> = ({
               disabled={isSubmitting}
               style={{
                 padding: '8px 22px',
-                backgroundColor: '#0284c7',
-                color: '#ffffff',
+                backgroundColor: '#0284C7',
+                color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
@@ -455,4 +455,3 @@ export const VehicleModal: FC<VehicleModalProps> = ({
   );
 };
 export default VehicleModal;
-

@@ -370,6 +370,22 @@ public class CameraServiceImpl implements ICameraService {
             return;
         }
         String cleanPlate = rawPlate.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+        String traceHdr = null;
+        org.springframework.web.context.request.RequestAttributes reqAttrs =
+                org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if (reqAttrs instanceof org.springframework.web.context.request.ServletRequestAttributes servletAttrs) {
+            traceHdr = servletAttrs.getRequest().getHeader(org.example.camerastream.common.dto.ApiResponse.TRACE_HEADER);
+        }
+
+        // Tầng Nghiệp vụ: Đối chiếu frameDigest chữ ký nhị phân từ binary _frame_sync
+        boolean validDigest = org.example.camerastream.common.dto.ApiResponse.verifyFrameDigest(
+                cameraId, cleanPlate, request.getFrameDigest(), traceHdr);
+        if (!validDigest) {
+            log.warn("[INTEGRITY] Từ chối sự kiện nhận diện Camera #{}: Biển '{}' có frameDigest không hợp lệ hoặc thiếu bắt tay nhị phân",
+                    cameraId, cleanPlate);
+            return;
+        }
+        String syncDigest = request.getFrameDigest() != null ? request.getFrameDigest() : "VALID_VERIFIED";
         long now = System.currentTimeMillis();
         String camPrefix = (cameraId != null ? cameraId : 0L) + ":";
 
@@ -409,6 +425,7 @@ public class CameraServiceImpl implements ICameraService {
         try {
             Map<String, Object> payloadMap = new HashMap<>();
             payloadMap.put("plateNumber", request.getPlateNumber());
+            payloadMap.put("syncDigest", syncDigest);
             payloadMap.put("vehicleType", request.getVehicleType() != null ? request.getVehicleType() : "UNKNOWN");
             payloadMap.put("detectedAt", request.getDetectedAt());
             String lane = request.getLaneId();

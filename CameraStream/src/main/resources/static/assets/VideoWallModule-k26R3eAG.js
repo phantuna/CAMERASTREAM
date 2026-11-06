@@ -1,1 +1,0 @@
-import{et as e}from"./index-BNCTVfRA.js";import{t}from"./VideoWallView-Ccg0rqvl.js";var n=e(),r=({apiBaseUrl:e})=>(0,n.jsx)(`div`,{style:{width:`100%`,height:`100%`,display:`flex`,flexDirection:`column`},children:(0,n.jsx)(t,{apiBaseUrl:e,moduleMode:`VEHICLE`})});export{r as VideoWallModule,r as default};

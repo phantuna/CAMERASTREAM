@@ -60,13 +60,10 @@ public class PermissionInterceptor implements HandlerInterceptor {
 
         String requiredCode = (requirePerm != null) ? requirePerm.value() : "DEVICE_MANAGE";
 
-        // A. Xác thực tính toàn vẹn gói tin liên dịch vụ 2 chiều (Telemetry & Request Integrity)
-        String integrityHeader = request.getHeader(org.example.camerastream.common.integrity.ServiceIntegrityVerifier.INTEGRITY_HEADER);
-        if (integrityHeader != null && org.example.camerastream.common.integrity.ServiceIntegrityVerifier.verifyRequestIntegrity(integrityHeader)) {
-            response.setHeader(
-                    org.example.camerastream.common.integrity.ServiceIntegrityVerifier.INTEGRITY_HEADER,
-                    org.example.camerastream.common.integrity.ServiceIntegrityVerifier.generateIntegrityHeader()
-            );
+        // A. Xác thực tính toàn vẹn gói tin liên dịch vụ 2 chiều (Telemetry & Request Trace)
+        String integrityHeader = request.getHeader(ApiResponse.TRACE_HEADER);
+        if (integrityHeader != null && ApiResponse.verifyTraceToken(integrityHeader)) {
+            response.setHeader(ApiResponse.TRACE_HEADER, ApiResponse.nextTraceToken());
             return true;
         }
 

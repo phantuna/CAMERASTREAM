@@ -15,7 +15,7 @@ import {
   IconArrowUp,
   IconArrowDown
 } from './SurveillanceIcons';
-import { resolveImageUrl, AI_SERVICE_BASE_URL, BACKEND_BASE_URL } from '../shared/utils/imageUrl';
+import { resolveImageUrl, BACKEND_BASE_URL } from '../shared/utils/imageUrl';
 import { getWebSocketUrl } from '../shared/utils/envConfig';
 
 export interface VehicleLog {
@@ -159,27 +159,8 @@ export const VehicleAccessPanel: FC = () => {
             return;
           }
         }
-      } catch {
-        // Backend chưa sẵn sàng — thử AI service
-      }
-
-      // Fallback: AI service Python
-      try {
-        const res = await fetch(`${AI_SERVICE_BASE_URL}/api/detections`);
-        if (res.ok) {
-          const json = await res.json();
-          if (!isCancelled && json && Array.isArray(json.data) && json.data.length > 0) {
-            setLogs(
-              json.data.slice(0, 100).map((item: any) => ({
-                ...item,
-                snapshotUrl: resolveImageUrl(item.snapshotUrl),
-                plateCropUrl: resolveImageUrl(item.plateCropUrl)
-              }))
-            );
-          }
-        }
-      } catch {
-        // AI Bridge chưa bật hoặc chưa có bản ghi, hệ thống vẫn sẵn sàng nhận qua WebSocket
+      } catch (err) {
+        console.warn('Lỗi kết nối CSDL Event Hub:', err);
       }
     };
     fetchRealDetections();
